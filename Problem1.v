@@ -40,3 +40,20 @@ module Mux2x2(a, b, sel, out);
     //If sel is 1, output is b, if sel is 0, output is a
     assign out = sel ? b : a;
 endmodule
+
+module ThisIsNotRight (x, y, cin, sum, cout);
+    input [7:0] x;
+    input [7:0] y;
+    input cin;
+    output [7:0] sum;
+    output cout;
+
+    wire [7:0] sum0, sum1;
+    wire cout0, cout1;
+
+    assign {cout0, sum0} = x + y + 0;
+    assign {cout1, sum1} = x + y + 1;
+
+    assign sum = cin ? sum1 : sum0;
+    assign cout = cin ? cout1 : cout0;
+endmodule
