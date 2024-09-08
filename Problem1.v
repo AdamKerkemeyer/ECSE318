@@ -9,6 +9,8 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
     wire [7:0] sum0, sum1; // first round of sums
     wire [8:0] muxCarry1, muxCarry0; //first round of mux selections
     wire [7:0] muxSum0, muxSum1; //first round of mux selections
+    wire [8:0] muxCarrySecond1, muxCarrySecond0; //second round of mux selections
+    wire [7:0] muxSumSecond0, muxSumSecond1; //second round of mux selections
     wire [8:0] correctCarry; //where the correct carrys are stored and pulled from
 
     wire [1:0] x1y1; //used as wires for x1 and y1 to first mux
@@ -43,14 +45,19 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
     mux2x3 secondRowMux ({muxSum1[3], muxSum1[2], muxCarry1[3]}, 
         {muxSum0[3], muxSum0[2], muxCarry0[3]}, correctCarry[2], {correctSum[3], correctSum[2], correctCarry[3]});
 
-//unsure how to wire up last 3 muxes, almost done
+    //unsure how to wire up last 3 muxes
     //x7y7 x6y6 x5y5x4y4 using muxCarry0[6] and muxCarry1[6]
     //not doing generate b/c only 1 sequence
-    mux2x3 mux2x30 ({muxSum1[3], muxSum1[2], muxCarry1[3]}, 
-        {muxSum0[3], muxSum0[2], muxCarry0[3]}, correctCarry[2], {correctSum[3], correctSum[2], correctCarry[3]});
-    mux2x3 mux2x31
+    mux2x3 mux2x30 ({muxSum1[7], muxSum1[6], muxCarry1[7]}, 
+        {muxSum0[7], muxSum0[6], muxCarry0[7]}, muxCarry0[6], {muxSumSecond0[7], muxSumSecond0[6], muxCarrySecond0[7]});
+    mux2x3 mux2x31 ({muxSum1[7], muxSum1[6], muxCarry1[7]}, 
+        {muxSum0[7], muxSum0[6], muxCarry0[7]}, muxCarry1[6], {muxSumSecond1[7], muxSumSecond1[6], muxCarrySecond1[7]});
 
+    //last mux
 
+    assign {corectSum[7:4], cout} = correctCarry[4] ? {muxSumSecond1[7:6], muxSum1[5:4], muxCarrySecond1[7]} : 
+        {muxSumSecond0[7:6], muxSum0[5:4], muxCarrySecond0[7]};
+        
 endmodule
 
 module full_adder(a, b, cin, sum, cout);
@@ -85,21 +92,4 @@ module mux2x3(a, b, sel, out);
     output [2:0] out;
     //If sel is 0, output is b, if sel is 1, output is a
     assign out = sel ? a : b;
-endmodule
-
-module ThisIsNotRight (x, y, cin, sum, cout);
-    input [7:0] x;
-    input [7:0] y;
-    input cin;
-    output [7:0] sum;
-    output cout;
-
-    wire [7:0] sum0, sum1;
-    wire cout0, cout1;
-
-    assign {cout0, sum0} = x + y + 0;
-    assign {cout1, sum1} = x + y + 1;
-
-    assign sum = cin ? sum1 : sum0;
-    assign cout = cin ? cout1 : cout0;
 endmodule
