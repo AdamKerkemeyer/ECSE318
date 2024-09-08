@@ -1,1 +1,1 @@
-ayo so we doing motherfuckin verlog here
+ayo so we doing motherfuckin verilog here
