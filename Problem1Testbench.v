@@ -17,17 +17,15 @@ module testCLA
   // Expected outputs
   reg [7:0] ExpectedSum;
   reg ExpectedCarryOut;
-  
+
   initial begin
-    // Initialize Inputs
     A = 0;
     B = 0;
+    #10;
 
-    // Monitor the changes
     $monitor("Time = %0t: A = %b, B = %b, Sum = %b, CarryOut = %b, ExpectedSum = %b, ExpectedCarryOut = %b", 
              $time, A, B, Sum, CarryOut, ExpectedSum, ExpectedCarryOut);
 
-    // Apply a range of test cases using a for loop
     for (integer i = 0; i < 256; i = i + 1) begin
       for (integer j = 0; j < 256; j = j + 1) begin
         #10 A = i; B = j;
@@ -35,7 +33,6 @@ module testCLA
       end
     end
 
-    // Finish the simulation
     #10 $finish;
   end
       
