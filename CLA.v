@@ -22,11 +22,11 @@ module CLA (A, B, CI, S, CO);
     and #10 g3(g[3], A[3], B[3]);
     
     //Sums
-    xor #10 s0(s[0], CI, p[0]);//S0
+    xor #10 s0(S[0], CI, p[0]);//S0
 
     and #10 c1i(pc1i, CI, p[0]);
     or #10 c1(ci1, pc1i, g[0]);
-    xor #10 s1(s[1], ci1, p[1]); //S1
+    xor #10 s1(S[1], ci1, p[1]); //S1
 
     and #10 c2i(pc2i, CI, p[0], p[1]);
     and #10 c20(pc20, g[0], p[1]);
@@ -49,29 +49,29 @@ endmodule
 
 
 module testCLA (A, B, CI, S, CO);
-    output [3:0] A, B;
-    output CI;
+    output reg [3:0] A, B;
+    output reg CI;
     input [3:0] S;
     input CO;
 
     initial begin
         $display("time A      B      CI  S      CO");
-        $monitor("%0t   %b   %b   %b   %b   %b   %b", $time, A, B, CI, S, CO);
-        #5 A<=4'b0000, B<=4'b0000, CI<=0;
+        $monitor("%0t   %b   %b   %b   %b   %b", $time, A, B, CI, S, CO);
+        #5 A <= 4'b0000; B<=4'b0000; CI<=0;
         #50 A<=4'b0001;
         #50 CI<=1'b1;
-        #50 CI<=1'b0, B<=4'b0001;
+        #50 CI<=1'b0; B<=4'b0001;
         #50 A<=4'b0011;
         #50 A<=4'b0111;
-        #50 A<=4'1111;
+        #50 A<=4'b1111;
     end
 
 endmodule
 
 module testbenchCLA ();
-    reg [3:0] A, B, S;
-    reg CI, CO;
+    wire [3:0] At, Bt, St;
+    wire CIt, COt;
 
-    CLA u(A, B, CI, S, CO);
-    testCLA t(A, B, CI, S, CO);
+    CLA u(At, Bt, CIt, St, COt);
+    testCLA t(At, Bt, CIt, St, COt);
 endmodule
