@@ -1,0 +1,27 @@
+b) the adder can compute in constant time, so any input that generates a carry will take max time. an example is A = 0111, B = 0001, Cin = 0. The input will goe through four gates, so 40 time units total.
+c) output of my testbench:
+# time A      B      CI  S      CO
+# 0   xxxx   xxxx   x   xxxx   x
+# 5   0000   0000   0   xxxx   x
+# 25   0000   0000   0   xxx0   x
+# 35   0000   0000   0   xx00   0
+# 45   0000   0000   0   0000   0
+# 55   0001   0000   0   0000   0
+# 75   0001   0000   0   0001   0
+# 105   0001   0000   1   0001   0
+# 115   0001   0000   1   0000   0
+# 135   0001   0000   1   0010   0
+# 155   0001   0001   0   0010   0
+# 165   0001   0001   0   0011   0
+# 175   0001   0001   0   0010   0
+# 205   0011   0001   0   0010   0
+# 225   0011   0001   0   0000   0
+# 245   0011   0001   0   0100   0
+# 255   0111   0001   0   0100   0
+# 275   0111   0001   0   0000   0
+# 295   0111   0001   0   1000   0
+# 305   1111   0001   0   1000   0
+# 325   1111   0001   0   0000   0
+# 335   1111   0001   0   0000   1
+
+look at time #255 to #295. It takes 40 time units to generate the output. 
