@@ -1,4 +1,4 @@
-module csaTestbench;
+module csaProblem1Testbench ();
 
   // Inputs
   reg [7:0] A;
@@ -8,18 +8,16 @@ module csaTestbench;
   wire [7:0] Sum;
   wire CarryOut;
 
+  // Instantiate the Unit Under Test (UUT)
+  conditional_sum_adder uut (A, B, Sum, CarryOut);
+  csaProblem1Test t(A, B, Sum, CarryOut);
+endmodule
+
+module testCLA
   // Expected outputs
   reg [7:0] ExpectedSum;
   reg ExpectedCarryOut;
-
-  // Instantiate the Unit Under Test (UUT)
-  adder_8bit uut (
-    .A(A), 
-    .B(B), 
-    .Sum(Sum), 
-    .CarryOut(CarryOut)
-  );
-
+  
   initial begin
     // Initialize Inputs
     A = 0;
