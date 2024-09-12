@@ -3,7 +3,7 @@ parameter N = 8;
 input [N-1:0] A, B, C;
 output [N-1:0] S, CO;
 
-assign S = A ^ B ^ S;
+assign S = A ^ B ^ C;
 assign CO = (A&B)|(B&C)|(A&C);
 
 endmodule
@@ -37,14 +37,21 @@ endmodule
 
 module testCSA();
 reg [7:0] A, B, C, D, E, F, G, H, I, J;
+reg cs1, cs2, cs3;
 wire [15:0] S;
+wire css, csco;
 
+CSA #(.N(1)) csa1(cs1, cs2, cs3, css, csco);
 Tx8A adder(A, B, C, D, E, F, G, H, I, J, S);
 
 initial begin
-    $monitor("%0t   %d+%d+%d+%d+%d+%d+%d+%d+%d+%d= %d",$time, A, B, C, D, E, F, G, H, I, J, S);
+    $monitor("%0t   %d+%d+%d+%d+%d+%d+%d+%d+%d+%d= %d,  A=%b B=%b C=%b | S=%b CO=%b",$time, A, B, C, D, E, F, G, H, I, J, S, cs1, cs2, cs3, css, csco);
     #10 A <= 8'd11; B<=8'd2; C<=8'd13; D<=8'd4; E<=8'd5; F<=8'd6; G<=8'd7; H<=8'd8; I<=8'd9; J<=8'd10;
     #50 A <= 8'd3; B<=8'd14; C<=8'd5; D<=8'd6; E<=8'd7; F<=8'd8; G<=8'd19; H<=8'd10; I<=8'd0; J<=8'd0;
+    #50 cs1<=1'b0; cs2<=1'b0; cs3<=1'b0;
+    #50 cs1<=1'b1;
+    #50 cs2<=1'b1;
+    #50 cs3<=1'b1;
 end
 
 endmodule
