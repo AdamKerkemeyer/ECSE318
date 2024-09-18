@@ -1,4 +1,3 @@
-
 module conditional_sum_adder(x, y, cin, cout, correctSum);
     input [7:0] x, y;
     input cin;
@@ -55,7 +54,7 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
 
     //last mux
 
-    assign {corectSum[7:4], cout} = correctCarry[4] ? {muxSumSecond1[7:6], muxSum1[5:4], muxCarrySecond1[7]} : 
+    assign {correctSum[7:4], cout} = correctCarry[4] ? {muxSumSecond1[7:6], muxSum1[5:4], muxCarrySecond1[7]} : 
         {muxSumSecond0[7:6], muxSum0[5:4], muxCarrySecond0[7]};
         
 endmodule
@@ -92,4 +91,53 @@ module mux2x3(a, b, sel, out);
     output [2:0] out;
     //If sel is 0, output is b, if sel is 1, output is a
     assign out = sel ? a : b;
+endmodule
+
+module csaProblem1Testbench;
+
+  // Inputs
+  reg [7:0] A;
+  reg [7:0] B;
+
+  wire cin;
+
+  // Outputs
+  wire [7:0] Sum;
+  wire CarryOut;
+
+  // Expected outputs
+  reg [7:0] ExpectedSum;
+  reg ExpectedCarryOut;
+
+  // Instantiate the Unit Under Test (UUT)
+  conditional_sum_adder uut (
+    .x(A), 
+    .y(B), 
+    .cin(cin),
+    .cout(CarryOut),
+    .correctSum(Sum)
+  );
+
+  initial begin
+    A = 0;
+    B = 0;
+    #10;
+
+    $monitor("Time = %0t: A = %b, B = %b, Sum = %b, CarryOut = %b, ExpectedSum = %b, ExpectedCarryOut = %b", 
+             $time, A, B, Sum, CarryOut, ExpectedSum, ExpectedCarryOut);
+
+    // Test all combinations of A and B without a for loop b/c modelsim wouldn't compile with it
+    repeat (256) begin
+      repeat (256) begin
+        #10;
+        {ExpectedCarryOut, ExpectedSum} = A + B;
+        B = B + 1;
+      end
+      A = A + 1;
+      B = 0;
+    end
+
+    #10 $finish;
+  end
+      
 endmodule
