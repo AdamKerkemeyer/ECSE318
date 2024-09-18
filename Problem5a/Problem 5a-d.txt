@@ -14,3 +14,6 @@ z1 z3 \ X1 X2	00	01	11	10
      D	     C,0	C,0	D,1	A,0			
 							
 	There are no races						
+d.
+In the simulation you see that they reach the same state but the update of Z1 lags the structural by #5
+because of the use of a seperate register that executes after the case statements are evaluated. 

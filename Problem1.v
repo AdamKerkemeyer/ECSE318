@@ -98,7 +98,6 @@ module csaProblem1Testbench;
   // Inputs
   reg [7:0] A;
   reg [7:0] B;
-
   reg cin;
 
   // Outputs
@@ -124,19 +123,20 @@ module csaProblem1Testbench;
     cin = 0;
     #10;
 
-    $monitor("Time = %0t: A = %b, B = %b, Sum = %b, CarryOut = %b, ExpectedSum = %b, ExpectedCarryOut = %b", 
-             $time, A, B, Sum, CarryOut, ExpectedSum, ExpectedCarryOut);
+    $monitor("Time = %0t: A = %b, B = %b, cin = %b, Sum = %b, CarryOut = %b, ExpectedSum = %b, ExpectedCarryOut = %b", 
+             $time, A, B, cin, Sum, CarryOut, ExpectedSum, ExpectedCarryOut);
 
     // Test all combinations of A and B without a for loop b/c modelsim wouldn't compile with it
     repeat (256) begin
-      repeat (256) begin
+      //repeat (256) begin
+	ExpectedSum = A + B;
+        ExpectedCarryOut = (A + B) >> 8;
         #10;
-        {ExpectedCarryOut, ExpectedSum} = A + B;
         B = B + 1;
       end
       A = A + 1;
       B = 0;
-    end
+    //end
 
     #10 $finish;
   end
