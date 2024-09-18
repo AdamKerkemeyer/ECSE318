@@ -99,7 +99,7 @@ module csaProblem1Testbench;
   reg [7:0] A;
   reg [7:0] B;
 
-  wire cin;
+  reg cin;
 
   // Outputs
   wire [7:0] Sum;
@@ -121,6 +121,7 @@ module csaProblem1Testbench;
   initial begin
     A = 0;
     B = 0;
+    cin = 0;
     #10;
 
     $monitor("Time = %0t: A = %b, B = %b, Sum = %b, CarryOut = %b, ExpectedSum = %b, ExpectedCarryOut = %b", 
