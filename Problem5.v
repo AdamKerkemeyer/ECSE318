@@ -1,8 +1,10 @@
-module Problem5Structural(input [1:0] X, output [1:0] Z);
+//behavioral takes #5 to update and lags structural due to the way it updates Z2 and then Z1 after.
+module Problem5Structural(input wire [1:0] X, output wire [1:0] Z);
     wire [5:0] and_outputs; // Intermediate wires for AND gate outputs
     wire Z3; // Output of third OR gate
     //Z[0] = Z2, Z[1] = Z1
     //X[0] = X2, X[1] = X1
+
     and_gate and1(~X[1], Z[1], and_outputs[0]);
     and_gate and2(Z[1], Z3, and_outputs[1]);
     and_gate and3(X[1], Z[0], and_outputs[2]);
@@ -113,6 +115,7 @@ module TB_Problem5;
         .X(X),
         .Z(Z_behavioral)
     );
+
     always #5 clk = ~clk;
 
     initial begin
@@ -120,15 +123,21 @@ module TB_Problem5;
         clk = 0;
         reset = 1;
         X = 2'b00;
-        #10 reset = 0;
+        #20 reset = 0;
 
-        //run tests
-        #10 X = 2'b00;
-        #10 X = 2'b01;
-        #10 X = 2'b10;
-        #10 X = 2'b11;
+        // Run tests
+        #20 X = 2'b10;
+        #20 X = 2'b00;
+        #20 X = 2'b01;
+        #20 X = 2'b11;
+        #20 X = 2'b10;
 
-        #10 $finish;
+        #20 X = 2'b00;
+        #20 X = 2'b10;
+        #20 X = 2'b11;
+        #20 X = 2'b01;
+
+        #20 $finish;
     end
 
     initial begin
