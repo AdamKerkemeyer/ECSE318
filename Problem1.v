@@ -38,6 +38,7 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
         .out_data(correctSum[1]),
         .out_carry(correctCarry[2])
     );
+
     genvar j; //unsure if I can reuse i;
     generate
         //Assign to intermediate sum and carry values as correct is unkown
@@ -74,6 +75,7 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
         .out_carry(correctCarry[4])
     );
 
+    //No issue with any of above muxes or full adders. least significant 4 bits always correct
     //Last 3 muxes here:
     n_bit_mux #(3) mux2nd1 (
         .in0_data({muxSum0[7], sum0[6]}),
@@ -95,9 +97,9 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
     );
     //final mux:
     n_bit_mux #(5) muxFinal (
-        .in0_data({muxSumSecond0[7:6], muxSum0[5], sum0[4]}),
+        .in0_data({muxSumSecond0[7:6], muxSum0[5], sum0[4]}), //Combination may be wrong
         .in0_carry(muxCarrySecond0),
-        .in1_data({muxSumSecond1[7:6], muxSum1[5], sum1[4]}),
+        .in1_data({muxSumSecond1[7:6], muxSum1[5], sum1[4]}), //Combination may be wrong
         .in1_carry(muxCarrySecond1),
         .sel(correctCarry[4]), //pick
         .out_data(correctSum[7:4]),
