@@ -6,6 +6,7 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
 
     wire [8:0] carry1, carry0; //first round of carrys
     wire [7:0] sum0, sum1; // first round of sums
+
     wire [8:0] muxCarry1, muxCarry0; //first round of mux selections
     wire [7:0] muxSum0, muxSum1; //first round of mux selections
     wire [8:0] muxCarrySecond1, muxCarrySecond0; //second round of mux selections
@@ -18,7 +19,7 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
     full_adder faInitial (y[0], x[0], cin, correctSum[0], correctCarry[1]);
 
     // First row of full adders
-    genvar i;
+    genvar i;   
     generate
         //Assign to intermediate sum and carry values as correct is unkown
         for (i = 1; i < 8; i = i + 1) begin : adders
@@ -27,6 +28,51 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
         end
     endgenerate
 
+    //x1y1 special case
+    n_bit_mux #(2) muxInit (
+        .in0_data(sum0[1]),
+        .in0_carry(carry0[2]),
+        .in1_data(sum1[1]),
+        .in1_carry(carry1[2]),
+        .sel(correctCarry[1]),
+        .out_data(correctSum[2]),
+        .out_carry(correctCarry[2])
+    );
+
+    // First row of multiplexers
+        n_bit_mux #(2) muxInit (
+        .in0_data(sum0[3]),
+        .in0_carry(carry0[4]),
+        .in1_data(sum1[3]),
+        .in1_carry(carry1[4]),
+        .sel(carry0[3]), //pick
+        .out_data(muxSum0[3]),
+        .out_carry(muxCarry0[4])
+    );
+        n_bit_mux #(2) muxInit (
+        .in0_data(sum0[3]),
+        .in0_carry(carry0[4]),
+        .in1_data(sum1[3]),
+        .in1_carry(carry1[4]),
+        .sel(carry1[3]), //pick
+        .out_data(muxSum1[3]),
+        .out_carry(muxCarry1[4])
+    );
+
+    //sum[3:2] multiplexer
+    n_bit_mux #(3) muxInit (
+        .in0_data({muxSum0[3], sum0[2]}),
+        .in0_carry(carry0[4]),
+        .in1_data({muxSum1[3], sum1[2]}),
+        .in1_carry(carry1[4]),
+        .sel(correctCarry[2]), //pick
+        .out_data(correctSum[3:2]),
+        .out_carry(correctCarry[4])
+    );
+
+
+
+/*
     //x1y1 special case
     mux2x2 muxInitial ({sum1[1], carry1[1]}, {sum0[1], carry0[1]}, correctCarry[1], {correctSum[1], correctCarry[2]});
     
@@ -56,7 +102,7 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
 
     assign {correctSum[7:4], cout} = correctCarry[4] ? {muxSumSecond1[7:6], muxSum1[5:4], muxCarrySecond1[7]} : 
         {muxSumSecond0[7:6], muxSum0[5:4], muxCarrySecond0[7]};
-        
+  */      
 endmodule
 
 module full_adder(a, b, cin, sum, cout);
@@ -75,6 +121,21 @@ module full_adder(a, b, cin, sum, cout);
     and (carry_intermediate2, sum_intermediate, cin);
     or (cout, carry_intermediate1, carry_intermediate2);
 endmodule
+
+module n_bit_mux (in0_data, in0_carry, in1_data, in1_carry, sel, out_data, out_carry);
+    parameter N = 2;
+    input [N-2:0] in0_data;
+    input in0_carry;       
+    input [N-2:0] in1_data; 
+    input in1_carry;       
+    input sel;        
+    output [N-2:0] out_data; 
+    output out_carry;       
+    //when sel = 1, it will pick input 1 data
+    assign out_data = sel ? in1_data : in0_data;
+    assign out_carry = sel ? in1_carry : in0_carry;
+endmodule
+
 
 //really all we need is the assign statement. Could do this without official MUX. 
 module mux2x2(a, b, sel, out);
