@@ -73,6 +73,7 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
         .out_data(correctSum[3:2]),
         .out_carry(correctCarry[4])
     );
+
     //Last 3 muxes here:
     n_bit_mux #(3) mux2nd1 (
         .in0_data({muxSum0[7], sum0[6]}),
@@ -170,6 +171,7 @@ module csaProblem1Testbench;
              $time, A, B, cin, Sum, CarryOut, ExpectedSum, ExpectedCarryOut);
 
     // Test all combinations of A and B without a for loop b/c modelsim wouldn't compile with it
+    // Works for about 95% of the tests. Not sure why it misses a bit sometimes.
     repeat (256) begin
       repeat (256) begin
 	ExpectedSum = A + B;
@@ -179,6 +181,8 @@ module csaProblem1Testbench;
       end
       A = A + 1;
       B = 0;
+      ExpectedSum = A + B;
+      ExpectedCarryOut = (A + B) >> 8;
     end
 
     #10 $finish;
