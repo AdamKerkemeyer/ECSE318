@@ -38,7 +38,6 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
         .out_data(correctSum[1]),
         .out_carry(correctCarry[2])
     );
-
     genvar j; //unsure if I can reuse i;
     generate
         //Assign to intermediate sum and carry values as correct is unkown
@@ -74,33 +73,31 @@ module conditional_sum_adder(x, y, cin, cout, correctSum);
         .out_data(correctSum[3:2]),
         .out_carry(correctCarry[4])
     );
-
-    //No issue with any of above muxes or full adders. least significant 4 bits always correct
     //Last 3 muxes here:
     n_bit_mux #(3) mux2nd1 (
         .in0_data({muxSum0[7], sum0[6]}),
-        .in0_carry(muxCarry0[8]),
+        .in0_carry(muxCarry1[8]),
         .in1_data({muxSum1[7], sum1[6]}),
-        .in1_carry(muxCarry1[8]),
+        .in1_carry(muxCarry0[8]),
         .sel(muxCarry0[6]), //pick
         .out_data(muxSumSecond0[7:6]),
         .out_carry(muxCarrySecond0)
     );
     n_bit_mux #(3) mux2nd2 (
         .in0_data({muxSum0[7], sum0[6]}),
-        .in0_carry(muxCarry0[8]),
+        .in0_carry(muxCarry1[8]),
         .in1_data({muxSum1[7], sum1[6]}),
-        .in1_carry(muxCarry1[8]),
+        .in1_carry(muxCarry0[8]),
         .sel(muxCarry1[6]), //pick
         .out_data(muxSumSecond1[7:6]),
         .out_carry(muxCarrySecond1)
     );
     //final mux:
     n_bit_mux #(5) muxFinal (
-        .in0_data({muxSumSecond0[7:6], muxSum0[5], sum0[4]}), //Combination may be wrong
-        .in0_carry(muxCarrySecond0),
-        .in1_data({muxSumSecond1[7:6], muxSum1[5], sum1[4]}), //Combination may be wrong
-        .in1_carry(muxCarrySecond1),
+        .in0_data({muxSumSecond0[7:6], muxSum0[5], sum0[4]}),
+        .in0_carry(muxCarrySecond1),
+        .in1_data({muxSumSecond1[7:6], muxSum1[5], sum1[4]}),
+        .in1_carry(muxCarrySecond0),
         .sel(correctCarry[4]), //pick
         .out_data(correctSum[7:4]),
         .out_carry(cout) //assign carry out
@@ -163,8 +160,6 @@ module csaProblem1Testbench;
     .correctSum(Sum)
   );
 
-
-    
   initial begin
     A = 0;
     B = 0;
@@ -174,16 +169,7 @@ module csaProblem1Testbench;
     $monitor("Time = %0t: A = %b, B = %b, cin = %b, Sum = %b, CarryOut = %b, ExpectedSum = %b, ExpectedCarryOut = %b", 
              $time, A, B, cin, Sum, CarryOut, ExpectedSum, ExpectedCarryOut);
 
-    A = 10;
-    #10 B = 60;
-    #10 A = 15;
-    #10 B = 200;
-    #10 A = 31;
-    #10 B = 147;
-    #10 A = 92;
-
     // Test all combinations of A and B without a for loop b/c modelsim wouldn't compile with it
-   /*
     repeat (256) begin
       repeat (256) begin
 	ExpectedSum = A + B;
@@ -196,8 +182,6 @@ module csaProblem1Testbench;
     end
 
     #10 $finish;
-*/
   end
-  
       
 endmodule
