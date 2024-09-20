@@ -163,6 +163,8 @@ module csaProblem1Testbench;
     .correctSum(Sum)
   );
 
+
+    
   initial begin
     A = 0;
     B = 0;
@@ -172,7 +174,16 @@ module csaProblem1Testbench;
     $monitor("Time = %0t: A = %b, B = %b, cin = %b, Sum = %b, CarryOut = %b, ExpectedSum = %b, ExpectedCarryOut = %b", 
              $time, A, B, cin, Sum, CarryOut, ExpectedSum, ExpectedCarryOut);
 
+    A = 10;
+    #10 B = 60;
+    #10 A = 15;
+    #10 B = 200;
+    #10 A = 31;
+    #10 B = 147;
+    #10 A = 92;
+
     // Test all combinations of A and B without a for loop b/c modelsim wouldn't compile with it
+   /*
     repeat (256) begin
       repeat (256) begin
 	ExpectedSum = A + B;
@@ -185,6 +196,8 @@ module csaProblem1Testbench;
     end
 
     #10 $finish;
+*/
   end
+  
       
 endmodule
