@@ -26,9 +26,10 @@ module freecellPlayer(clock, source, dest, win);
     //best practice to treat source and destination inputs as read only
     //This is the card we are picking up from the source and moving to the destination
     reg [5:0] card;
-    //column to record the source and destination
-    integer colS, colD;
-
+    //Need to remember which home placement was valid
+    int homeSpot;
+    reg [1:0] i; //used for loop of free cells
+    reg[2:0] j; //used for loop of columns
     /*Suite valuation First two bits:
     Heart = 00
     Diamond = 01
@@ -203,11 +204,9 @@ module freecellPlayer(clock, source, dest, win);
         sourceValid = 0;
         destValid = 0; //assume source and destination are not valid on startup
         card = EMPTY; //not currently holding a card
-        colS = 0; //no set source or destination column (only set if src or dst is column)
-        colD = 0;
-        reg [1:0] i; //used for loop of free cells
-        reg[2:0] j; //used for loop of columns
-
+        homeSpot = 0;
+        i = 2'b00; //reset
+        j = 3'b000;
         //Pass in the source as input for a case
         case(source)
             //When I played freeCell online we could pull from the home cell stack, so this could represent that move
@@ -232,8 +231,64 @@ module freecellPlayer(clock, source, dest, win);
         //Must check the source first so we know what card we are holding
         case(dest)
             4'b11xx: begin //home cell
-                
+                //This is an attempt to send the card we are holding home
+                //need to figure out which home, if any it belongs to
+                int k;
+                for(int k = 0; k < 4; k = k+1) begin
+                    if(home[k][5:4] == card[5:4] && home[k][3:0] == (card[3:0]-1'b1)) begin
+                        destValid = 1;
+                        homeSpot = k;
+                    end
+                end
+            end
+            4'b10xx: begin //free cell
+                i = dest[1:0];
+                if(free[i] == EMPTY)
+                    destValid = 1;
+            end
+            4'b0xxx: begin //column of tableau
+                j = dest[2:0];
+                if(col[j][0] == EMPTY)//check if empty column
+                    destValid = 1; 
+                //Need to check the suite (MSB indicates red or black) and then check if the card being moved is 1 less
+                else if(col[j][length[j]][5] != card[5] && col[j][length[j]][3:0] == card[3:0] + 1'b1) begin
+                    destValid = 1;
+                end //otherwise destValid remains at 0
+            end
         endcase
+    end
 
+    //Check the move on the positive edge of the clock and commit the move on the negedge of the clock
+    //This will ensure we check the move is valid before making the move. Ensuring proper timing without delay
+    always @(negedge clock) begin
+        if((sourceValid == 1) && (destValid == 1)) begin
+            case(source) //delete the card from the source
+                4'b10xx: begin
+                    free[i] = EMPTY;
+                end
+                4'b1xxx: begin
+                    j = source[2:0];
+                    col[j][largest[j]] = EMPTY;
+                    largest[j] = largest[j] - 1; //shorten length of column by 1
+                end
+            endcase
+            case(dest) //place at the destination
+                //Place at home will just overwrite previous
+                4'b11xx: home[homeSpot] = card;
+                4'b10xx: begin 
+                    i = dest[i:0];
+                    free[i] = card; //nothing to overwrite
+                end
+                4'b0xxx: begin
+                    j = dest[2:0];
+                    length[j] = length[j] + 1; //increase length of column by 1
+                    col[j][length[j]] = card; 
+                end
+            endcase
+            $display("Card: %b Source: %b Destination: %b Successful!", card, source, dest)
+        end
+        else $display("Attempted move was not valid");
+        //assign win equal to true if there is a king in each home spot, order of suite doesn't matter
+        assign win = (home[0] == 6'bxx1101 && home[1] == 6'bxx1101 && home[2] == 6'bxx1101 && home[3] == 6'bxx1101);
     end
 endmodule
