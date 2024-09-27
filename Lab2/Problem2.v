@@ -5,19 +5,29 @@ module freecellPlayer(clock, source, dest, win);
     //add other global variables here:
 
     //each column adds progressively so spot 0 is the highers (all cards above must be removed first)
-    reg [5:0] col0 [15:0];
+    /*reg [5:0] col0 [15:0];
     reg [5:0] col1 [15:0];
     reg [5:0] col2 [15:0];
     reg [5:0] col3 [15:0];
     reg [5:0] col4 [15:0];
     reg [5:0] col5 [15:0];
     reg [5:0] col6 [15:0];
-    reg [5:0] col7 [15:0];
+    reg [5:0] col7 [15:0]; */
+    reg [5:0] col [7:0][15:0];
     //Home cells (only hold 1 card at a time, will be overwritten in an event of another valid placement)
     //space for 4 cards, one of each suite
     reg [5:0] home [3:0];
     //free cells
     reg [5:0] free [3:0];
+    //record the largest occupied spot in each row sp we don't have to check
+    integer [7:0] largest;
+    //set T/F if the source and destination are valid, 0 = false, 1 = true
+    reg sourceValid, destValid;
+    //best practice to treat source and destination inputs as read only
+    //This is the card we are picking up from the source and moving to the destination
+    reg [5:0] card;
+    //column to record the source and destination
+    integer colS, colD;
 
     /*Suite valuation First two bits:
     Heart = 00
@@ -102,73 +112,81 @@ module freecellPlayer(clock, source, dest, win);
     HA   H2    CA    S8 
     */
     initial begin
-        col0[0] = S4;
-        col0[1] = DJ;
-        col0[2] = D10;
-        col0[3] = D6;
-        col0[4] = S3;
-        col0[5] = DA;
-        col0[6] = HA;
-        col0[7:15] = EMPTY;
+        col[0][0] = S4;
+        col[0][1] = DJ;
+        col[0][2] = D10;
+        col[0][3] = D6;
+        col[0][4] = S3;
+        col[0][5] = DA;
+        col[0][6] = HA;
+        col[0][7:15] = EMPTY;
+        largest[0] = 6;
 
-        col1[0] = S5;
-        col1[1] = S10;
-        col1[2] = H8;
-        col1[3] = C4;
-        col1[4] = H6;
-        col1[5] = HK;
-        col1[6] = H2;
-        col1[7:15] = EMPTY;
+        col[1][0] = S5;
+        col[1][1] = S10;
+        col[1][2] = H8;
+        col[1][3] = C4;
+        col[1][4] = H6;
+        col[1][5] = HK;
+        col[1][6] = H2;
+        col[1][7:15] = EMPTY;
+        largest[1] = 6;
 
-        col2[0] = SJ;
-        col2[1] = C7;
-        col2[2] = C9;
-        col2[3] = C6;
-        col2[4] = C2;
-        col2[5] = SK;
-        col2[6] = CA;
-        col2[7:15] = EMPTY;
+        col[2][0] = SJ;
+        col[2][1] = C7;
+        col[2][2] = C9;
+        col[2][3] = C6;
+        col[2][4] = C2;
+        col[2][5] = SK;
+        col[2][6] = CA;
+        col[2][7:15] = EMPTY;
+        largest[2] = 6;
 
-        col3[0] = H4;
-        col3[1] = SA;
-        col3[2] = CQ;
-        col3[3] = C5;
-        col3[4] = S7;
-        col3[5] = H9;
-        col3[6] = S8;
-        col3[7:15] = EMPTY;
+        col[3][0] = H4;
+        col[3][1] = SA;
+        col[3][2] = CQ;
+        col[3][3] = C5;
+        col[3][4] = S7;
+        col[3][5] = H9;
+        col[3][6] = S8;
+        col[3][7:15] = EMPTY;
+        largest[3] = 6;
 
-        col4[0] = DQ;
-        col4[1] = HJ;
-        col4[2] = SQ;
-        col4[3] = S6;
-        col4[4] = D2;
-        col4[5] = S9;
-        col4[6:15] = EMPTY;
+        col[4][0] = DQ;
+        col[4][1] = HJ;
+        col[4][2] = SQ;
+        col[4][3] = S6;
+        col[4][4] = D2;
+        col[4][5] = S9;
+        col[4][6:15] = EMPTY;
+        largest[4] = 5;
 
-        col5[0] = D5;
-        col5[1] = DK;
-        col5[2] = C3;
-        col5[3] = D9;
-        col5[4] = H3;
-        col5[5] = S2;
-        col5[6:15] = EMPTY;
+        col[5][0] = D5;
+        col[5][1] = DK;
+        col[5][2] = C3;
+        col[5][3] = D9;
+        col[5][4] = H3;
+        col[5][5] = S2;
+        col[5][6:15] = EMPTY;
+        largest[5] = 5;
 
-        col6[0] = H5;
-        col6[1] = D3;
-        col6[2] = HQ;
-        col6[3] = D7;
-        col6[4] = CK;
-        col6[5] = C10;
-        col6[6:15] = EMPTY;
+        col[6][0] = H5;
+        col[6][1] = D3;
+        col[6][2] = HQ;
+        col[6][3] = D7;
+        col[6][4] = CK;
+        col[6][5] = C10;
+        col[6][6:15] = EMPTY;
+        largest[6] = 5;
 
-        col7[0] = CJ;
-        col7[1] = D4;
-        col7[2] = H10;
-        col7[3] = C8;
-        col7[4] = H7;
-        col7[5] = D8;
-        col7[6:15] = EMPTY;
+        col[7][0] = CJ;
+        col[7][1] = D4;
+        col[7][2] = H10;
+        col[7][3] = C8;
+        col[7][4] = H7;
+        col[7][5] = D8;
+        col[7][6:15] = EMPTY;
+        largest[7] = 5;
 
         home[0] = 6'b000000;
         home[1] = 6'b000000;
@@ -181,4 +199,41 @@ module freecellPlayer(clock, source, dest, win);
         free[3] = 6'b000000;
     end
 
+    always @(posedge clk) begin 
+        sourceValid = 0;
+        destValid = 0; //assume source and destination are not valid on startup
+        card = EMPTY; //not currently holding a card
+        colS = 0; //no set source or destination column (only set if src or dst is column)
+        colD = 0;
+        reg [1:0] i; //used for loop of free cells
+        reg[2:0] j; //used for loop of columns
+
+        //Pass in the source as input for a case
+        case(source)
+            //When I played freeCell online we could pull from the home cell stack, so this could represent that move
+            4'b11xx: $display("Illegal input"); //don't need to set sourceValid = 0 as that is default.
+            4'b10xx: begin //grabbing from free cell
+                i = source[1:0]; //grab the free cell of interest
+                if(free[i] != EMPTY) begin //if it is empty there will be nothing to pickup, thus not valid
+                    card = free[i]; //pickup the card from free[i]
+                    sourceValid = 1; //don't wipe free[0] till we see if dest is valid
+                end
+            end
+            //Go through the tableau with a similar for loop:
+            4'b1xxx: begin //grabbing from column
+                j = source[2:0]
+                if(col[j][0] != EMPTY) begin//check if there is at least 1 element in the column
+                    card = col[j][largest[j]];
+                    sourceValid = 1;
+                end
+            end
+            default: $display("Debugging: SRC input not recognized.")
+        endcase
+        //Must check the source first so we know what card we are holding
+        case(dest)
+            4'b11xx: begin //home cell
+                
+        endcase
+
+    end
 endmodule
