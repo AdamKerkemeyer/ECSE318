@@ -1,3 +1,36 @@
+module ALU(A, B, alu_code, C, overflow);
+input [15:0] A, B;
+input [4:0] alu_code;
+output [15:0] C;
+output overflow;
+
+endmodule
+
+module flipBits(In, Out);//Just inverts all the bits of a number. Do the rest of twos complement with the adder carry-in
+    parameter N = 16;
+    input [N-1:0] In;
+    output [N-1:0] Out;
+
+    genvar i;
+    generate
+        for (i = N-1; i>0; i=i-1) begin
+            not n(Out[i], In[i]);
+        end
+    endgenerate
+endmodule
+
+/* WORK ON ME
+module shifter(A, B, place_Ones, Z);//Returns A shifted B bits. if place_ones is true it puts ones in the new places. You only need the last 4 bits of B. Handle large values of B elsewhere
+    input [15:0] A;
+    input [3:0] B;
+    input place_Ones;
+    output [15:0] Z;
+
+    wire
+
+    genvar i;
+*/
+
 module BKA(S, Cout, A, B, Cin); // Brent kruger adds two numbers (Gi, Pi) = (gi, pi) ○ (Gi-1, Pi-1)
     output [16:1] S;
     output Cout;
