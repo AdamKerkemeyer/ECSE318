@@ -1,7 +1,7 @@
 module freecellPlayer(clock, source, dest, win);
     input clock;
     input [3:0] source, dest;
-    output win;
+    output reg win;
     //add other global variables here:
 
     //each column adds progressively so spot 0 is the highers (all cards above must be removed first)
@@ -27,9 +27,10 @@ module freecellPlayer(clock, source, dest, win);
     //This is the card we are picking up from the source and moving to the destination
     reg [5:0] card;
     //Need to remember which home placement was valid
-    int homeSpot;
+    integer homeSpot;
     reg [1:0] i; //used for loop of free cells
     reg[2:0] j; //used for loop of columns
+    integer k; //Used to find which home cell a card's destination may be
     /*Suite valuation First two bits:
     Heart = 00
     Diamond = 01
@@ -200,12 +201,13 @@ module freecellPlayer(clock, source, dest, win);
         free[3] = 6'b000000;
     end
 
-    always @(posedge clk) begin 
+    always @(posedge clock) begin 
         sourceValid = 0;
         destValid = 0; //assume source and destination are not valid on startup
         card = EMPTY; //not currently holding a card
         homeSpot = 0;
-        i = 2'b00; //reset
+	k = 0; //reset
+        i = 2'b00;
         j = 3'b000;
         //Pass in the source as input for a case
         case(source)
@@ -220,21 +222,20 @@ module freecellPlayer(clock, source, dest, win);
             end
             //Go through the tableau with a similar for loop:
             4'b1xxx: begin //grabbing from column
-                j = source[2:0]
+                j = source[2:0];
                 if(col[j][0] != EMPTY) begin//check if there is at least 1 element in the column
                     card = col[j][largest[j]];
                     sourceValid = 1;
                 end
             end
-            default: $display("Debugging: SRC input not recognized.")
+            default: $display("Debugging: SRC input not recognized.");
         endcase
         //Must check the source first so we know what card we are holding
         case(dest)
             4'b11xx: begin //home cell
                 //This is an attempt to send the card we are holding home
                 //need to figure out which home, if any it belongs to
-                int k;
-                for(int k = 0; k < 4; k = k+1) begin
+                for(k = 0; k < 4; k = k+1) begin
                     if(home[k][5:4] == card[5:4] && home[k][3:0] == (card[3:0]-1'b1)) begin
                         destValid = 1;
                         homeSpot = k;
@@ -251,7 +252,7 @@ module freecellPlayer(clock, source, dest, win);
                 if(col[j][0] == EMPTY)//check if empty column
                     destValid = 1; 
                 //Need to check the suite (MSB indicates red or black) and then check if the card being moved is 1 less
-                else if(col[j][length[j]][5] != card[5] && col[j][length[j]][3:0] == card[3:0] + 1'b1) begin
+                else if((col[j][largest[j]][5] != card[5]) && (col[j][largest[j]][3:0] == (card[3:0] + 1'b1))) begin
                     destValid = 1;
                 end //otherwise destValid remains at 0
             end
@@ -281,11 +282,11 @@ module freecellPlayer(clock, source, dest, win);
                 end
                 4'b0xxx: begin
                     j = dest[2:0];
-                    length[j] = length[j] + 1; //increase length of column by 1
-                    col[j][length[j]] = card; 
+                    largest[j] = largest[j] + 1; //increase length of column by 1
+                    col[j][largest[j]] = card; 
                 end
             endcase
-            $display("Card: %b Source: %b Destination: %b Successful!", card, source, dest)
+            $display("Card: %b Source: %b Destination: %b Successful!", card, source, dest);
         end
         else $display("Attempted move was not valid");
         //assign win equal to true if there is a king in each home spot, order of suite doesn't matter
