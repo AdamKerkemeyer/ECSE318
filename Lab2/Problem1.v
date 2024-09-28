@@ -1,53 +1,143 @@
-module NCLA( A, B, Cin, S, Cout); //N bit CLA
-    parameter N = 16;
-    input[N-1:0] A, B;
-    input Cin;
-    output[N-1:0] S;
+module BKA(S, Cout, A, B, Cin); // Brent kruger adds two numbers (Gi, Pi) = (gi, pi) ○ (Gi-1, Pi-1)
+    output [16:1] S;
     output Cout;
+    input [16:1] A, B;
+    input Cin;
 
+    wire [16:1] p, g;
+    wire [16:1] P2 [1:4];
+    wire [16:1] G2 [1:4];
 
-wire[N-1:-1] g, p, S;
+    assign p = A ^ B;
+    assign g[16:2] = A[16:2] & B[16:2];
+    assign g[1] = (A[1] & B[1]) | (A[1] & Cin) | (B[1] & Cin);
 
-
-
-assign g[-1] = Cin;
-assign p[-1] = 1'b1;
-
-
-genvar i, k;
-generate
-    for (i = N-1; i>-1; i=i-1) begin
-        wire [i-1:0] cins; //holds all posible bits that could be a carry in
-        xor xp(p[i], A[i], B[i]);//Propogate bits
-        and ag(g[i], A[i], B[i]);//Generate Bits
-        xor xs(S[i], p[i], |{cins, g[i-1]}); //Generate Sums
-        for (k = 0; k<i; k=k+1)begin
-            assign cins[k] = &{g[k-1], p[k:i]};
+    genvar i;
+    generate//2121212121212121
+        for(i=16; i>0; i=i-2) begin
+            BKop b2(G2[1][i], P2[1][i], g[i], p[i], g[i-1], p[i-1]);
+            assign G2[1][i-1] = g[i-1];
+            assign P2[1][i-1] = p[i-1];
         end
-    end
-endgenerate
+    endgenerate
 
-//Cout is a poin in the ass to extract from those for loops, but I can do it myself. It does make the adder slightly slower though
-assign Cout = (A[N-1] && B[N-1]) || ((A[N-1] || B[N-1]) ^ S[N-1]);
+    generate//4321432143214321
+        for(i=16; i>0; i=i-1) begin
+            if (i % 4 == 0) begin//4s
+                BKop b4(G2[2][i], P2[2][i], G2[1][i], P2[1][i], G2[1][i-2], P2[1][i-2]);
+            end
+            else if ((i+1) % 4 == 0) begin//3s
+                BKop b3(G2[2][i], P2[2][i], G2[1][i], P2[1][i], G2[1][i-1], P2[1][i-1]);
+            end
+            else begin
+                assign G2[2][i] = G2[1][i];
+                assign P2[2][i] = P2[1][i];
+            end
+        end
+    endgenerate
+
+    generate //8765432187654321
+        for (i=16; i>0; i=i-1) begin
+            if (i % 8 == 0) begin//8s
+                BKop b8(G2[3][i], P2[3][i], G2[2][i], P2[2][i], G2[2][i-4], P2[2][i-4]);
+            end
+            else if ((i+1) % 8 == 0) begin//7s
+                BKop b7(G2[3][i], P2[3][i], G2[2][i], P2[2][i], G2[2][i-3], P2[2][i-3]);
+            end
+            else if ((i+2) % 8 == 0) begin//6s
+                BKop b7(G2[3][i], P2[3][i], G2[2][i], P2[2][i], G2[2][i-2], P2[2][i-2]);
+            end
+            else if ((i+3) % 8 == 0) begin//5s
+                BKop b7(G2[3][i], P2[3][i], G2[2][i], P2[2][i], G2[2][i-1], P2[2][i-1]);
+            end
+            else begin
+                assign G2[3][i] = G2[2][i];
+                assign P2[3][i] = P2[2][i];
+            end
+        end
+    endgenerate
+
+    generate//all done
+        for (i=16; i>0; i=i-1) begin
+            if (i>8) begin
+                BKop bd(G2[4][i], P2[4][i], G2[3][i], P2[3][i], G2[3][8], P2[3][8]);
+            end
+            else begin
+                assign G2[4][i] = G2[3][i];
+                assign P2[4][i] = P2[3][i];
+            end
+        end
+    endgenerate
+
+//Final Processing
+    assign S[1] = p[1] ^ Cin;
+    assign Cout = G2[4][16];
+
+    generate
+        for (i = 16; i>1; i=i-1) begin
+            assign S[i] = p[i] ^ G2[4][i-1];
+        end
+    endgenerate
 
 endmodule
 
-module testNCLA();//there is no way this works
+module BKop(go, po, g1, p1, g2, p2); //the brenk-kruger opperation
+    output go, po;
+    input g1, p1, g2, p2;
 
-reg [3:0] A, B;
+    assign go = g1 | (p1 & g2);
+    assign po = p1 & p2;
+
+endmodule
+
+module testBKA ();
+reg [15:0] A, B;
 reg Cin;
-wire [3:0] S;
+wire [15:0] S;
 wire Cout;
 
-NCLA #(4) uut(A, B, Cin, S, Cout);
+BKA uut(S, Cout, A, B, Cin);
 
 initial begin
-    $monitor("%4t, %4b %4b %b -> %b %4b", $time, A, B, Cin, Cout, S);
+   // $monitor("%4t, %16b %16b %b -> %b %16b", $time, A, B, Cin, Cout, S);
     A = 4'b0; B = 4'b0; Cin = 1'b0;
     #50
     A = 4'b0001;
     #50
     B = 4'b0001;
+    #50
+    B = 16'b1111111111111111;
+    #50
+    B = 16'b1110111111111111;
+    #50
+    A = 1'b0;
+    Cin = 1'b1;
+    #50
+    Cin = 1'b0;
+    A = 16'b0000000000000001;
+    B = 16'b0000000000000111;
+    #50
+    A = 16'b1111010001000111;
+    B = 16'b0000000000101010;
+    #5
+    //$display("%16b %16b -> %b %16b %16b \n p[4]:%b, G2[4][3]:%b G2[3][3]:%b G2[2][3]:%b G2[1][3]:%b \n     g:%16b \n G2[1]:%16b\n G2[2]:%16b \n G2[3]:%16b \n G2[4]:%16b"
+    //, A, B, Cout, S, A+B, uut.p[4], uut.G2[4][3], uut.G2[3][3], uut.G2[2][3], uut.G2[1][3], uut.g, uut.G2[1], uut.G2[2], uut.G2[3], uut.G2[4]);
+    #50
+    Cin = 1'b0;
+    B = 1'b0;
+    A = 1'b0;
+
+    repeat (100) begin
+        A = A + A*3 + 1;
+        B = B + 47;
+        #5
+        if (S != A + B) begin
+            $display("Issue: %16b %16b -> %b %16b %16b", A, B, Cout, S, A+B);
+        end
+        
+    end
+    $display("DONE");
+    
 end
 
 endmodule
