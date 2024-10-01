@@ -1,13 +1,15 @@
 // testbench for the freecell player.
-// This simple testbench presents one move to the freecell player at each
-// clock cycle. The task "doMove" allows the user to specify the moves in
-// standard notation.
-//
-// Each move consists of two characters: the first designates the source;
-// the second designates the destination.
-//
-
 `include "Problem2.v"
+
+module freecellPlayer (clock,source,dest,win);
+input	[3:0] source, dest;
+input	clock;
+output	win;
+
+always	@(posedge clock or source or dest)
+	$display($time,"  %d %d", source,dest);
+
+endmodule
 
 module testFreeCell;
     reg [3:0] source;
@@ -18,42 +20,41 @@ module testFreeCell;
     // Convert the character notation into bit-level codes.
     function [3:0] encode;
 	input [7:0] selector;
-    begin: dec
-	case (selector)
-	  "1": encode = 4'd0;	// column 1 of the tableau
-	  "2": encode = 4'd1;	// column 2 of the tableau
-	  "3": encode = 4'd2;	// column 3 of the tableau
-	  "4": encode = 4'd3;	// column 4 of the tableau
-	  "5": encode = 4'd4;	// column 5 of the tableau
-	  "6": encode = 4'd5;	// column 6 of the tableau
-	  "7": encode = 4'd6;	// column 7 of the tableau
-	  "8": encode = 4'd7;	// column 8 of the tableau
-	  "a": encode = 4'd8;	// free cell a
-	  "b": encode = 4'd9;	// free cell b
-	  "c": encode = 4'd10;	// free cell c
-	  "d": encode = 4'd11;	// free cell d
-	  "h": encode = 4'd12;	// home cells: the two LSBs are arbitrary
-	  default: encode = 4'bx;
-	endcase // case (selector)
-    end // block: dec
+    	begin: dec
+		case (selector)
+	  		"1": encode = 4'd0 ;	// column 1 of the tableau
+	  		"2": encode = 4'd1 ;	// column 2 of the tableau
+	  		"3": encode = 4'd2 ;	// column 3 of the tableau
+	  		"4": encode = 4'd3 ;	// column 4 of the tableau
+	  		"5": encode = 4'd4 ;	// column 5 of the tableau
+	  		"6": encode = 4'd5 ;	// column 6 of the tableau
+	  		"7": encode = 4'd6 ;	// column 7 of the tableau
+	  		"8": encode = 4'd7 ;	// column 8 of the tableau
+	  		"a": encode = 4'd8 ;	// free cell a
+	  		"b": encode = 4'd9 ;	// free cell b
+	  		"c": encode = 4'd10;	// free cell c
+	  		"d": encode = 4'd11;	// free cell d
+	  		"h": encode = 4'd12;	// home cells: the two LSBs
+						// are arbitrary
+	  		default: encode = 4'bx;
+		endcase // case (selector)
+    	end // block: dec
     endfunction // encode
 
     // Present one move to the circuit and wait one clock cycle.
     task doMove;
 	input [15:0] move;
-    begin: doTheMove
-	source = encode(move[15:8]);
-	dest   = encode(move[7:0]);
-	#10;
-    end // block: doTheMove
+    	begin: doTheMove
+		source = encode(move[15:8]);
+		dest   = encode(move[7:0]);
+		#10;
+    	end // block: doTheMove
     endtask // doMove
 
     // Play the game. Several illegal moves are interspersed with the
     // legal ones.
     initial begin
-	$monitor("time=%d  source=%b dest=%b win=%b",$time, source, dest, win);
 	clock = 0;
-
 	doMove("1h");	// 1
 	doMove("1h");	// 2
 	doMove("2h");	// 3
@@ -175,7 +176,7 @@ module testFreeCell;
 	doMove("4h");	// 113
 	doMove("5h");	// 114
 	doMove("6h");	// 115
-	#1 $finish;
+	$finish;
     end // initial begin
 
     // Clock generator.
