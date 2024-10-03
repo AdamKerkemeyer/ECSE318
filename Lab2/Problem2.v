@@ -20,7 +20,7 @@ module freecellPlayer(clock, source, dest, win);
     //free cells
     reg [5:0] free [3:0];
     //record the largest occupied spot in each row sp we don't have to check
-    integer [7:0] largest;
+    integer largest [7:0];
     //set T/F if the source and destination are valid, 0 = false, 1 = true
     reg sourceValid, destValid;
     //best practice to treat source and destination inputs as read only
@@ -101,7 +101,7 @@ module freecellPlayer(clock, source, dest, win);
     localparam [5:0] CK = 6'b111101;
 
     localparam [5:0] EMPTY = 6'b000000;
-
+    integer loop;
 
     /*Initialize game 8321
     0    1     2     3   4    5   6    7
@@ -121,7 +121,9 @@ module freecellPlayer(clock, source, dest, win);
         col[0][4] = S3;
         col[0][5] = DA;
         col[0][6] = HA;
-        col[0][7:15] = EMPTY;
+        for (loop = 7; loop <= 15; loop = loop + 1) begin
+            col[0][i] = EMPTY;
+        end
         largest[0] = 6;
 
         col[1][0] = S5;
@@ -131,7 +133,9 @@ module freecellPlayer(clock, source, dest, win);
         col[1][4] = H6;
         col[1][5] = HK;
         col[1][6] = H2;
-        col[1][7:15] = EMPTY;
+        for (loop = 7; loop <= 15; loop = loop + 1) begin
+            col[1][i] = EMPTY;
+        end
         largest[1] = 6;
 
         col[2][0] = SJ;
@@ -141,7 +145,9 @@ module freecellPlayer(clock, source, dest, win);
         col[2][4] = C2;
         col[2][5] = SK;
         col[2][6] = CA;
-        col[2][7:15] = EMPTY;
+        for (loop = 7; loop <= 15; loop = loop + 1) begin
+            col[2][i] = EMPTY;
+        end
         largest[2] = 6;
 
         col[3][0] = H4;
@@ -151,7 +157,9 @@ module freecellPlayer(clock, source, dest, win);
         col[3][4] = S7;
         col[3][5] = H9;
         col[3][6] = S8;
-        col[3][7:15] = EMPTY;
+        for (loop = 7; loop <= 15; loop = loop + 1) begin
+            col[3][i] = EMPTY;
+        end
         largest[3] = 6;
 
         col[4][0] = DQ;
@@ -160,7 +168,9 @@ module freecellPlayer(clock, source, dest, win);
         col[4][3] = S6;
         col[4][4] = D2;
         col[4][5] = S9;
-        col[4][6:15] = EMPTY;
+        for (loop = 6; loop <= 15; loop = loop + 1) begin
+            col[4][i] = EMPTY;
+        end
         largest[4] = 5;
 
         col[5][0] = D5;
@@ -169,7 +179,9 @@ module freecellPlayer(clock, source, dest, win);
         col[5][3] = D9;
         col[5][4] = H3;
         col[5][5] = S2;
-        col[5][6:15] = EMPTY;
+        for (loop = 6; loop <= 15; loop = loop + 1) begin
+            col[5][i] = EMPTY;
+        end
         largest[5] = 5;
 
         col[6][0] = H5;
@@ -178,7 +190,9 @@ module freecellPlayer(clock, source, dest, win);
         col[6][3] = D7;
         col[6][4] = CK;
         col[6][5] = C10;
-        col[6][6:15] = EMPTY;
+        for (loop = 6; loop <= 15; loop = loop + 1) begin
+            col[6][i] = EMPTY;
+        end
         largest[6] = 5;
 
         col[7][0] = CJ;
@@ -187,7 +201,9 @@ module freecellPlayer(clock, source, dest, win);
         col[7][3] = C8;
         col[7][4] = H7;
         col[7][5] = D8;
-        col[7][6:15] = EMPTY;
+        for (loop = 6; loop <= 15; loop = loop + 1) begin
+            col[7][i] = EMPTY;
+        end
         largest[7] = 5;
 
         home[0] = 6'b000000;
@@ -276,10 +292,12 @@ module freecellPlayer(clock, source, dest, win);
             case(dest) //place at the destination
                 //Place at home will just overwrite previous
                 4'b11xx: home[homeSpot] = card;
+		//Place at free cell
                 4'b10xx: begin 
-                    i = dest[i:0];
+                    i = dest[1:0];
                     free[i] = card; //nothing to overwrite
                 end
+		//place in column of tableau
                 4'b0xxx: begin
                     j = dest[2:0];
                     largest[j] = largest[j] + 1; //increase length of column by 1
