@@ -20,8 +20,8 @@ module freecellPlayer(clock, source, dest, win);
     reg [5:0] card;
     //Need to remember which home placement was valid
     integer homeSpot;
-    reg [1:0] i; //used for loop of free cells
-    reg[2:0] j; //used for loop of columns
+    reg [1:0] i, l; //used for loop of free cells
+    reg[2:0] j, m; //used for loop of columns
     integer k; //Used to find which home cell a card's destination may be
 
     //Source and Dest are assigned here to maintain immutability between the positive and negative edge of the clock.
@@ -233,7 +233,7 @@ module freecellPlayer(clock, source, dest, win);
         i = tempSource[1:0];
         j = tempSource[2:0];
         l = tempDest[1:0];
-        m = tenpDest[2:0];
+        m = tempDest[2:0];
         //Pass in the source as input for a casex
         casex(tempSource)
             //When I played freeCell online we could pull from the home cell stack, so this could represent that move
@@ -291,19 +291,17 @@ module freecellPlayer(clock, source, dest, win);
 
             end
             4'b10xx: begin //free cell
-		        $display("Attempting to move card to free cell");
-                //l = tempDest[1:0];
+		        //$display("Attempting to move card to free cell");
                 if(free[l] == EMPTY)
                     destValid = 1;
             end
             4'b0xxx: begin //column of tableau
-                //m = tempDest[2:0];
                 if(col[m][0] == EMPTY)//check if empty column
                     destValid = 1; 
                 //Need to check the suite (MSB indicates red or black) and then check if the card being moved is 1 less
                 else if((col[m][largest[m]][5] != card[5]) && (col[m][largest[m]][3:0] == (card[3:0] + 1'b1))) begin
                     destValid = 1;
-                    $display("Column Destination is valid");
+                    //$display("Column Destination is valid");
                 end //otherwise destValid remains at 0
             end
             default: $display("Debugging: DEST input not recognized. Dest: %b", tempDest);
@@ -316,14 +314,14 @@ module freecellPlayer(clock, source, dest, win);
         i = tempSource[1:0];
         j = tempSource[2:0];
         l = tempDest[1:0];
-        m = tenpDest[2:0];
+        m = tempDest[2:0];
         if((sourceValid == 1) && (destValid == 1)) begin
             casex(tempSource) //delete the card from the source
                 4'b10xx: begin
                     free[i] = EMPTY;
                 end
-                4'b1xxx: begin
-                    //j = tempSource[2:0];
+                4'b0xxx: begin
+                    //$display("Card defined below is erased from the stack");
                     col[j][largest[j]] = EMPTY;
                     largest[j] = largest[j] - 1; //shorten length of column by 1
                 end
@@ -333,12 +331,10 @@ module freecellPlayer(clock, source, dest, win);
                 4'b11xx: home[homeSpot] = card;
 		        //Place at free cell
                 4'b10xx: begin 
-                    //l = tempDest[1:0];
                     free[l] = card; //nothing to overwrite
                 end
 		        //place in column of tableau
                 4'b0xxx: begin
-                    //m = tempDest[2:0];
                     largest[m] = largest[m] + 1; //increase length of column by 1
                     col[m][largest[m]] = card; 
                 end
@@ -347,6 +343,6 @@ module freecellPlayer(clock, source, dest, win);
         end
         else $display("Attempted move was not valid");
         //assign win equal to true if there is a king in each home spot, order of suite doesn't matter
-        assign win = (home[0] == 6'bxx1101 && home[1] == 6'bxx1101 && home[2] == 6'bxx1101 && home[3] == 6'bxx1101);
+        assign win = ((home[0] == 6'b001101) && (home[1] == 6'b011101) && (home[2] == 6'b101101) && (home[3] == 6'b111101));
     end
 endmodule

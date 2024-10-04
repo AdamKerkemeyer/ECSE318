@@ -55,7 +55,7 @@ module testFreeCell;
     // legal ones.
     initial begin
 	clock = 0;
-	doMose("1h"); //repeat incase missed this move
+	doMove("1h"); //repeat incase missed this move
 	doMove("1h");	// 1
 	doMove("1h");	// 2
 	doMove("2h");	// 3
@@ -177,6 +177,8 @@ module testFreeCell;
 	doMove("4h");	// 113
 	doMove("5h");	// 114
 	doMove("6h");	// 115
+	#10; //Need to let last transaction finish to declare win
+	$display("Win: %b", win);
 	$finish;
     end // initial begin
 
