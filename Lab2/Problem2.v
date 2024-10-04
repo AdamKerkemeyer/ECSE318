@@ -5,14 +5,6 @@ module freecellPlayer(clock, source, dest, win);
     //add other global variables here:
 
     //each column adds progressively so spot 0 is the highers (all cards above must be removed first)
-    /*reg [5:0] col0 [15:0];
-    reg [5:0] col1 [15:0];
-    reg [5:0] col2 [15:0];
-    reg [5:0] col3 [15:0];
-    reg [5:0] col4 [15:0];
-    reg [5:0] col5 [15:0];
-    reg [5:0] col6 [15:0];
-    reg [5:0] col7 [15:0]; */
     reg [5:0] col [7:0][15:0];
     //Home cells (only hold 1 card at a time, will be overwritten in an event of another valid placement)
     //space for 4 cards, one of each suite
@@ -31,6 +23,10 @@ module freecellPlayer(clock, source, dest, win);
     reg [1:0] i; //used for loop of free cells
     reg[2:0] j; //used for loop of columns
     integer k; //Used to find which home cell a card's destination may be
+
+    //Source and Dest are assigned here to maintain immutability between the positive and negative edge of the clock.
+    reg [3:0] tempSource, tempDest;
+
     /*Suite valuation First two bits:
     Heart = 00
     Diamond = 01
@@ -114,6 +110,9 @@ module freecellPlayer(clock, source, dest, win);
     HA   H2    CA    S8 
     */
     initial begin
+	    tempSource = 0;
+	    tempDest = 0;
+
         col[0][0] = S4;
         col[0][1] = DJ;
         col[0][2] = D10;
@@ -217,7 +216,9 @@ module freecellPlayer(clock, source, dest, win);
         free[3] = 6'b000000;
     end
 
-    always @(posedge clock) begin 
+    always @(posedge clock) begin
+	tempSource = source;
+	tempDest = dest;
         sourceValid = 0;
         destValid = 0; //assume source and destination are not valid on startup
         card = EMPTY; //not currently holding a card
@@ -225,30 +226,33 @@ module freecellPlayer(clock, source, dest, win);
 	k = 0; //reset
         i = 2'b00;
         j = 3'b000;
-        //Pass in the source as input for a case
-        case(source)
+        //Pass in the source as input for a casex
+        casex(tempSource)
             //When I played freeCell online we could pull from the home cell stack, so this could represent that move
             4'b11xx: $display("Illegal input"); //don't need to set sourceValid = 0 as that is default.
             4'b10xx: begin //grabbing from free cell
-                i = source[1:0]; //grab the free cell of interest
+                $display("Attempting to grab card from free cell");
+                i = tempSource[1:0]; //grab the free cell of interest
                 if(free[i] != EMPTY) begin //if it is empty there will be nothing to pickup, thus not valid
                     card = free[i]; //pickup the card from free[i]
                     sourceValid = 1; //don't wipe free[0] till we see if dest is valid
                 end
             end
             //Go through the tableau with a similar for loop:
-            4'b1xxx: begin //grabbing from column
-                j = source[2:0];
+            4'b0xxx: begin //grabbing from column
+                $display("Attempting to grab card from column");
+                j = tempSource[2:0];
                 if(col[j][0] != EMPTY) begin//check if there is at least 1 element in the column
                     card = col[j][largest[j]];
                     sourceValid = 1;
                 end
             end
-            default: $display("Debugging: SRC input not recognized.");
+            default: $display("Debugging: SRC input not recognized. Source: %b", tempSource);
         endcase
         //Must check the source first so we know what card we are holding
-        case(dest)
+        casex(tempDest)
             4'b11xx: begin //home cell
+		$display("Attempting to move card to home");
                 //This is an attempt to send the card we are holding home
                 //need to figure out which home, if any it belongs to
                 for(k = 0; k < 4; k = k+1) begin
@@ -259,12 +263,14 @@ module freecellPlayer(clock, source, dest, win);
                 end
             end
             4'b10xx: begin //free cell
-                i = dest[1:0];
+		$display("Attempting to move card to free cell");
+                i = tempDest[1:0];
                 if(free[i] == EMPTY)
                     destValid = 1;
             end
             4'b0xxx: begin //column of tableau
-                j = dest[2:0];
+		$display("Attempting to move card to column");
+                j = tempDest[2:0];
                 if(col[j][0] == EMPTY)//check if empty column
                     destValid = 1; 
                 //Need to check the suite (MSB indicates red or black) and then check if the card being moved is 1 less
@@ -272,6 +278,7 @@ module freecellPlayer(clock, source, dest, win);
                     destValid = 1;
                 end //otherwise destValid remains at 0
             end
+            default: $display("Debugging: DEST input not recognized. Dest: %b", tempDest);
         endcase
     end
 
@@ -279,32 +286,32 @@ module freecellPlayer(clock, source, dest, win);
     //This will ensure we check the move is valid before making the move. Ensuring proper timing without delay
     always @(negedge clock) begin
         if((sourceValid == 1) && (destValid == 1)) begin
-            case(source) //delete the card from the source
+            casex(tempSource) //delete the card from the source
                 4'b10xx: begin
                     free[i] = EMPTY;
                 end
                 4'b1xxx: begin
-                    j = source[2:0];
+                    j = tempSource[2:0];
                     col[j][largest[j]] = EMPTY;
                     largest[j] = largest[j] - 1; //shorten length of column by 1
                 end
             endcase
-            case(dest) //place at the destination
+            casex(tempDest) //place at the destination
                 //Place at home will just overwrite previous
                 4'b11xx: home[homeSpot] = card;
-		//Place at free cell
+		        //Place at free cell
                 4'b10xx: begin 
-                    i = dest[1:0];
+                    i = tempDest[1:0];
                     free[i] = card; //nothing to overwrite
                 end
-		//place in column of tableau
+		        //place in column of tableau
                 4'b0xxx: begin
-                    j = dest[2:0];
+                    j = tempDest[2:0];
                     largest[j] = largest[j] + 1; //increase length of column by 1
                     col[j][largest[j]] = card; 
                 end
             endcase
-            $display("Card: %b Source: %b Destination: %b Successful!", card, source, dest);
+            $display("Card: %b Source: %b Destination: %b Successful! Win: %b", card, tempSource, tempDest, win);
         end
         else $display("Attempted move was not valid");
         //assign win equal to true if there is a king in each home spot, order of suite doesn't matter
