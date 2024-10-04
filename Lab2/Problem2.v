@@ -5,7 +5,7 @@ module freecellPlayer(clock, source, dest, win);
     //add other global variables here:
 
     //each column adds progressively so spot 0 is the highers (all cards above must be removed first)
-    reg [5:0] col [7:0][15:0];
+    reg [5:0] col [7:0][12:0];
     //Home cells (only hold 1 card at a time, will be overwritten in an event of another valid placement)
     //space for 4 cards, one of each suite
     reg [5:0] home [3:0];
@@ -112,6 +112,12 @@ module freecellPlayer(clock, source, dest, win);
     initial begin
 	    tempSource = 0;
 	    tempDest = 0;
+        
+        //Need to assign suite to home rows because part of the check is that the suite matches
+        home[0] = 6'b000000;
+        home[1] = 6'b010000;
+        home[2] = 6'b100000;
+        home[3] = 6'b110000;
 
         col[0][0] = S4;
         col[0][1] = DJ;
@@ -120,7 +126,7 @@ module freecellPlayer(clock, source, dest, win);
         col[0][4] = S3;
         col[0][5] = DA;
         col[0][6] = HA;
-        for (loop = 7; loop <= 15; loop = loop + 1) begin
+        for (loop = 7; loop <= 12; loop = loop + 1) begin
             col[0][i] = EMPTY;
         end
         largest[0] = 6;
@@ -132,7 +138,7 @@ module freecellPlayer(clock, source, dest, win);
         col[1][4] = H6;
         col[1][5] = HK;
         col[1][6] = H2;
-        for (loop = 7; loop <= 15; loop = loop + 1) begin
+        for (loop = 7; loop <= 12; loop = loop + 1) begin
             col[1][i] = EMPTY;
         end
         largest[1] = 6;
@@ -144,7 +150,7 @@ module freecellPlayer(clock, source, dest, win);
         col[2][4] = C2;
         col[2][5] = SK;
         col[2][6] = CA;
-        for (loop = 7; loop <= 15; loop = loop + 1) begin
+        for (loop = 7; loop <= 12; loop = loop + 1) begin
             col[2][i] = EMPTY;
         end
         largest[2] = 6;
@@ -156,7 +162,7 @@ module freecellPlayer(clock, source, dest, win);
         col[3][4] = S7;
         col[3][5] = H9;
         col[3][6] = S8;
-        for (loop = 7; loop <= 15; loop = loop + 1) begin
+        for (loop = 7; loop <= 12; loop = loop + 1) begin
             col[3][i] = EMPTY;
         end
         largest[3] = 6;
@@ -167,7 +173,7 @@ module freecellPlayer(clock, source, dest, win);
         col[4][3] = S6;
         col[4][4] = D2;
         col[4][5] = S9;
-        for (loop = 6; loop <= 15; loop = loop + 1) begin
+        for (loop = 6; loop <= 12; loop = loop + 1) begin
             col[4][i] = EMPTY;
         end
         largest[4] = 5;
@@ -178,7 +184,7 @@ module freecellPlayer(clock, source, dest, win);
         col[5][3] = D9;
         col[5][4] = H3;
         col[5][5] = S2;
-        for (loop = 6; loop <= 15; loop = loop + 1) begin
+        for (loop = 6; loop <= 12; loop = loop + 1) begin
             col[5][i] = EMPTY;
         end
         largest[5] = 5;
@@ -189,7 +195,7 @@ module freecellPlayer(clock, source, dest, win);
         col[6][3] = D7;
         col[6][4] = CK;
         col[6][5] = C10;
-        for (loop = 6; loop <= 15; loop = loop + 1) begin
+        for (loop = 6; loop <= 12; loop = loop + 1) begin
             col[6][i] = EMPTY;
         end
         largest[6] = 5;
@@ -200,7 +206,7 @@ module freecellPlayer(clock, source, dest, win);
         col[7][3] = C8;
         col[7][4] = H7;
         col[7][5] = D8;
-        for (loop = 6; loop <= 15; loop = loop + 1) begin
+        for (loop = 6; loop <= 12; loop = loop + 1) begin
             col[7][i] = EMPTY;
         end
         largest[7] = 5;
@@ -217,22 +223,24 @@ module freecellPlayer(clock, source, dest, win);
     end
 
     always @(posedge clock) begin
-	tempSource = source;
-	tempDest = dest;
+	    tempSource = source;
+	    tempDest = dest;
         sourceValid = 0;
         destValid = 0; //assume source and destination are not valid on startup
         card = EMPTY; //not currently holding a card
         homeSpot = 0;
-	k = 0; //reset
-        i = 2'b00;
-        j = 3'b000;
+	    k = 0; //reset
+        i = tempSource[1:0];
+        j = tempSource[2:0];
+        l = tempDest[1:0];
+        m = tenpDest[2:0];
         //Pass in the source as input for a casex
         casex(tempSource)
             //When I played freeCell online we could pull from the home cell stack, so this could represent that move
             4'b11xx: $display("Illegal input"); //don't need to set sourceValid = 0 as that is default.
             4'b10xx: begin //grabbing from free cell
-                $display("Attempting to grab card from free cell");
-                i = tempSource[1:0]; //grab the free cell of interest
+                //$display("Attempting to grab card from free cell");
+                //i = tempSource[1:0]; //grab the free cell of interest
                 if(free[i] != EMPTY) begin //if it is empty there will be nothing to pickup, thus not valid
                     card = free[i]; //pickup the card from free[i]
                     sourceValid = 1; //don't wipe free[0] till we see if dest is valid
@@ -240,8 +248,8 @@ module freecellPlayer(clock, source, dest, win);
             end
             //Go through the tableau with a similar for loop:
             4'b0xxx: begin //grabbing from column
-                $display("Attempting to grab card from column");
-                j = tempSource[2:0];
+                //$display("Attempting to grab card from column");
+                //j = tempSource[2:0];
                 if(col[j][0] != EMPTY) begin//check if there is at least 1 element in the column
                     card = col[j][largest[j]];
                     sourceValid = 1;
@@ -252,30 +260,50 @@ module freecellPlayer(clock, source, dest, win);
         //Must check the source first so we know what card we are holding
         casex(tempDest)
             4'b11xx: begin //home cell
-		$display("Attempting to move card to home");
                 //This is an attempt to send the card we are holding home
                 //need to figure out which home, if any it belongs to
+                /*
                 for(k = 0; k < 4; k = k+1) begin
-                    if(home[k][5:4] == card[5:4] && home[k][3:0] == (card[3:0]-1'b1)) begin
+                    if((home[k][5:4] == card[5:4]) && (home[k][3:0] == (card[3:0]-1'b1))) begin
                         destValid = 1;
                         homeSpot = k;
+                        $display("Card moving to home");
                     end
                 end
+                */ //For some reason home[k][5:4], I have no idea why but this solves it
+                if ((2'b00 == card[5:4]) && (home[0][3:0] == (card[3:0] - 1'b1))) begin
+                    destValid = 1;
+                    homeSpot = 0;
+                    $display("Card moving to Hearts home");
+                end else if ((2'b01 == card[5:4]) && (home[1][3:0] == (card[3:0] - 1'b1))) begin
+                    destValid = 1;
+                    homeSpot = 1;
+                    $display("Card moving to Diamond home");
+                end else if ((2'b10 == card[5:4]) && (home[2][3:0] == (card[3:0] - 1'b1))) begin
+                    destValid = 1;
+                    homeSpot = 2;
+                    $display("Card moving to Spade home");
+                end else if ((2'b11 == card[5:4]) && (home[3][3:0] == (card[3:0] - 1'b1))) begin
+                    destValid = 1;
+                    homeSpot = 3;
+                    $display("Card moving to Club home");
+                end
+
             end
             4'b10xx: begin //free cell
-		$display("Attempting to move card to free cell");
-                i = tempDest[1:0];
-                if(free[i] == EMPTY)
+		        $display("Attempting to move card to free cell");
+                //l = tempDest[1:0];
+                if(free[l] == EMPTY)
                     destValid = 1;
             end
             4'b0xxx: begin //column of tableau
-		$display("Attempting to move card to column");
-                j = tempDest[2:0];
-                if(col[j][0] == EMPTY)//check if empty column
+                //m = tempDest[2:0];
+                if(col[m][0] == EMPTY)//check if empty column
                     destValid = 1; 
                 //Need to check the suite (MSB indicates red or black) and then check if the card being moved is 1 less
-                else if((col[j][largest[j]][5] != card[5]) && (col[j][largest[j]][3:0] == (card[3:0] + 1'b1))) begin
+                else if((col[m][largest[m]][5] != card[5]) && (col[m][largest[m]][3:0] == (card[3:0] + 1'b1))) begin
                     destValid = 1;
+                    $display("Column Destination is valid");
                 end //otherwise destValid remains at 0
             end
             default: $display("Debugging: DEST input not recognized. Dest: %b", tempDest);
@@ -285,13 +313,17 @@ module freecellPlayer(clock, source, dest, win);
     //Check the move on the positive edge of the clock and commit the move on the negedge of the clock
     //This will ensure we check the move is valid before making the move. Ensuring proper timing without delay
     always @(negedge clock) begin
+        i = tempSource[1:0];
+        j = tempSource[2:0];
+        l = tempDest[1:0];
+        m = tenpDest[2:0];
         if((sourceValid == 1) && (destValid == 1)) begin
             casex(tempSource) //delete the card from the source
                 4'b10xx: begin
                     free[i] = EMPTY;
                 end
                 4'b1xxx: begin
-                    j = tempSource[2:0];
+                    //j = tempSource[2:0];
                     col[j][largest[j]] = EMPTY;
                     largest[j] = largest[j] - 1; //shorten length of column by 1
                 end
@@ -301,14 +333,14 @@ module freecellPlayer(clock, source, dest, win);
                 4'b11xx: home[homeSpot] = card;
 		        //Place at free cell
                 4'b10xx: begin 
-                    i = tempDest[1:0];
-                    free[i] = card; //nothing to overwrite
+                    //l = tempDest[1:0];
+                    free[l] = card; //nothing to overwrite
                 end
 		        //place in column of tableau
                 4'b0xxx: begin
-                    j = tempDest[2:0];
-                    largest[j] = largest[j] + 1; //increase length of column by 1
-                    col[j][largest[j]] = card; 
+                    //m = tempDest[2:0];
+                    largest[m] = largest[m] + 1; //increase length of column by 1
+                    col[m][largest[m]] = card; 
                 end
             endcase
             $display("Card: %b Source: %b Destination: %b Successful! Win: %b", card, tempSource, tempDest, win);

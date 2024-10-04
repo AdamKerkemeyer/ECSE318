@@ -55,6 +55,7 @@ module testFreeCell;
     // legal ones.
     initial begin
 	clock = 0;
+	doMose("1h"); //repeat incase missed this move
 	doMove("1h");	// 1
 	doMove("1h");	// 2
 	doMove("2h");	// 3
