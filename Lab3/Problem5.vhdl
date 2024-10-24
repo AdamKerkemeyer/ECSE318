@@ -2,6 +2,9 @@
 -- numbers by storing the content of memory 11 in memory 0, content of memory 10 in memory 1 ...
 -- and content of memory 0 in memory 11.
 library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL; --Need this package to do arithmatick for evaluate
+
 entity problem5 is 
     --Create memory for input/output (inout) that is initialized to 0
     port (memory : inout STD_LOGIC(95 downto 0) := (others => '0'));
