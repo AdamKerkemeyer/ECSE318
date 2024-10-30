@@ -17,5 +17,14 @@ end entity
 architecture rtl of Problem3 is
 
 begin
+    process(Clk) is --Runs whenever CLK changes
+        if rising_edge(Clk) then --Only run on rising edge
+            if clear = '1' then
+                Output <= (others => '0');
+            else
+                --Do logic here
 
+            end if;
+        end if;
+    end process;
 end architecture;

@@ -1,12 +1,9 @@
 library ieee; use ieee.std_logic_1164.all;
-
 entity FA is
     port( 
         i_a, i_b, i_cin : in std_logic;
-        o_s, o_cout : out std_logic
-    );
+        o_s, o_cout : out std_logic);
 end FA;
-
 
 architecture spec of FA is
     begin
