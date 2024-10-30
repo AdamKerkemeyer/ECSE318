@@ -14,10 +14,11 @@ end problem6;
 architecture rtl of problem6 is
     signal Cgate : STD_LOGIC (7 downto 0); --what is difference if use vector
 begin
-    --process() --Since unclocked can do without process
+    process is --Since unclocked can do without process
+    begin
     --Evaluate
     Cgate <= A * B( + "00000010"); --add 2 in 8 bit notation
     --write the value to memory
     C <= Cgate;
-    --end process;
+    end process;
 end rtl;
