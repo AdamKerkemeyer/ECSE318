@@ -37,29 +37,15 @@ begin
     -- Stimulus process
     stim_proc: process
     begin
-        -- Test vector 1
-        x <= "00000001"; y <= "00000001"; cin <= '0';
-        wait for 10 ns;
-        
-        -- Test vector 2
-        x <= "00001111"; y <= "00001111"; cin <= '1';
-        wait for 10 ns;
-        
-        -- Test vector 3
-        x <= "10101010"; y <= "01010101"; cin <= '0';
-        wait for 10 ns;
-        
-        -- Test vector 4
-        x <= "11111111"; y <= "00000001"; cin <= '1';
-        wait for 10 ns;
-        
-        -- Test vector 5
-        x <= "11110000"; y <= "00001111"; cin <= '0';
-        wait for 10 ns;
-        
-        -- Add more test vectors as needed
-        -- ...
-
+    -- Loop through all possible combinations of x and y
+        for i in 0 to 255 loop
+            for j in 0 to 255 loop
+                x <= std_logic_vector(to_unsigned(i, 8));
+                y <= std_logic_vector(to_unsigned(j, 8));
+                cin <= '0';  -- You can also loop through cin if needed
+                wait for 10 ns;
+            end loop;
+        end loop;
         -- End simulation
         wait;
     end process;
