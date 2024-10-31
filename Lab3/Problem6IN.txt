@@ -3,3 +3,33 @@
 /
 /Evaluate C = A*(B+2)
 /A,B,C stored in  memory locations 0, 1, and 2 respectively
+/
+/Load value for A into memory0
+/A = 11
+ld 0000 000000001011
+str memory0 0000
+/Load random value for B into memory1
+/B = 5
+ld 0000 000000000101
+str memory1 0000
+/
+/Evaluate C = A * (B + 2)
+/
+/Load the value of B from memory1 into register 0
+ld 0000 memory1
+/Load the value 2 into register 1
+ld 0001 000000000010
+/
+/Add 2 to B (stored in register 0) and store result in register 0
+add 0000 0001
+/Store the result of (B + 2) back in memory1 temporarily
+str memory1 0000
+/
+/Load the value of A from memory0 into register 1
+ld 0001 memory0
+/
+/Multiply A (in register 1) by (B + 2) (in register 0) and store result in register 0
+/mul 0000 0001
+/
+/Store the result (C = A * (B + 2)) in memory2
+str memory2 0000

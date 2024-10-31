@@ -4,3 +4,102 @@
 /12 numbers are stored in memory location 0 to 11. Write a program to reverse the list of
 /numbers by storing the content of memory 11 in memory 0, content of memory 10 in memory 1 ...
 /and content of memory 0 in memory 11.
+/
+/First we need to write 12 values (in two's complement) to the memory location 0 to 11
+/Memory locations can be named anything for our compiler and they will be assigned an address
+/in memory regardless of the name.
+/Technically we don't need to load the value into the register first because str
+/will allow us to write a hardcoded value directly to memory but load and then store is good practice
+/
+/Load value 0 into memory0
+ld 0000 000000000000
+str memory0 0000
+/Load value 1 into memory1
+ld 0000 000000000001
+str memory1 0000
+/Load value 2 into memory2
+ld 0000 000000000010
+str memory2 0000
+/Load value 3 into memory3
+ld 0000 000000000011
+str memory3 0000
+/Load value 4 into memory4
+ld 0000 000000000100
+str memory4 0000
+/Load value 5 into memory5
+ld 0000 000000000101
+str memory5 0000
+/Load value 6 into memory6
+ld 0000 000000000110
+str memory6 0000
+/Load value 7 into memory7
+ld 0000 000000000111
+str memory7 0000
+/Load value 8 into memory8
+ld 0000 000000001000
+str memory8 0000
+/Load value 9 into memory9
+ld 0000 000000001001
+str memory9 0000
+/Load value 10 into memory10
+ld 0000 000000001010
+str memory10 0000
+/Load value 11 into memory11
+ld 0000 000000001011
+str memory11 0000
+/
+/Begin reversing memory locations using register0 and register1 as temporary variable locations
+/
+/Load memory0 into register 0
+ld 0000 memory0
+/Load memory11 into register 1
+ld 0001 memory11
+/Store register 1's value (memory11) into memory0
+str memory0 0001
+/Store register 0's value (memory0) into memory11
+str memory11 0000
+/
+/Load memory1 into register 0
+ld 0000 memory1
+/Load memory10 into register 1
+ld 0001 memory10
+/Store register 1's value (memory10) into memory1
+str memory1 0001
+/Store register 0's value (memory1) into memory10
+str memory10 0000
+/
+/Load memory2 into register 0
+ld 0000 memory2
+/Load memory9 into register 1
+ld 0001 memory9
+/Store register 1's value (memory9) into memory2
+str memory2 0001
+/Store register 0's value (memory2) into memory9
+str memory9 0000
+/
+/Load memory3 into register 0
+ld 0000 memory3
+/Load memory8 into register 1
+ld 0001 memory8
+/Store register 1's value (memory8) into memory3
+str memory3 0001
+/Store register 0's value (memory3) into memory8
+str memory8 0000
+/
+/Load memory4 into register 0
+ld 0000 memory4
+/Load memory7 into register 1
+ld 0001 memory7
+/Store register 1's value (memory7) into memory4
+str memory4 0001
+/Store register 0's value (memory4) into memory7
+str memory7 0000
+/
+/Load memory5 into register 0
+ld 0000 memory5
+/Load memory6 into register 1
+ld 0001 memory6
+/Store register 1's value (memory6) into memory5
+str memory5 0001
+/Store register 0's value (memory5) into memory6
+str memory6 0000
