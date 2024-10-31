@@ -29,7 +29,21 @@ str memory1 0000
 ld 0001 memory0
 /
 /Multiply A (in register 1) by (B + 2) (in register 0) and store result in register 0
-/mul 0000 0001
+/Because we cannot multiply, we will add register 1 to register 2 X times
+/And decrement register 0 by adding in twos complement until it is 0
+/We can then read the zero value in the processor status registry
+/The branch statement will send back to line 41 until the comparison is zero
+/For this to work we assume that B is greater or equal to -1
+/
+/We need to load -1 into register 3 to be used to decrement register 0 (B + 2)
+ld 0011 111111111110
+/add register 1 contents (A) to register 2 
+add 0010 0010
+/decrement register 0 (B + 2) by 1
+add 0000 0011
+/Check to see if register 0 is zero yet
+/Branch says if condition code zero is met (last calculation resulted in zero) return to line 41
+bra 41 zero 
 /
 /Store the result (C = A * (B + 2)) in memory2
 str memory2 0000
