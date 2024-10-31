@@ -92,16 +92,23 @@ inputfile = open(input(), mode='r')
 inputtext = inputfile.readlines()
 inputfile.close()
 
-i = 0
+
 compileGood = True
 outlist = []#holds all of the final binary instructions
-for aLine in inputtext:
+for i in range(4096):
     outline = "" #holds the binary for the current line
-    iline = removeChar(removeChar(aLine,","),"\n")# The input string for one line
+    if i < len(inputtext):
+        iline = removeChar(removeChar(inputtext[i],","),"\n")# The input string for one line
+    else:
+        iline = ""
     iline = iline.casefold() #make it lower case
-    ilist = iline.rsplit(" ")#split the line into a list of strings. Every space is deleted and indicates a new item
+    if len(iline) == 0:
+        ilist = []
+    else:
+        ilist = iline.rsplit(" ")#split the line into a list of strings. Every space is deleted and indicates a new item
+    #begin decoding the line
     if len(ilist) == 0: #skip empty lines
-        pass
+        outline = "0000" + "0" + "0" + "00" +"000000000000" + "000000000000"
     elif ilist[0] == "nop" and len(ilist) == 1:
         outline = "0000" + "0" + "0" + "00" +"000000000000" + "000000000000"
     elif ilist[0] == "hlt" and len(ilist) == 1:
@@ -188,13 +195,13 @@ for aLine in inputtext:
         #no source address
         outline = outline + "000000000000"
         #destination address aka where the the program will jump to
-        #program memorry is stored in #1xxxxxxxxxxx
+        #program memorry is stored in 12 bit adresses in PC
         if isInteger(ilist[1]) and int(ilist[1]) >= 0 and int(ilist[1]) < 2048:
             binary = format(int(ilist[1]),'b')
-            charsNeeded = 11 - len(binary)
+            charsNeeded = 12 - len(binary)
             for x in range(charsNeeded): #append 0s to make the adress length 12
                 binary = "0" + binary
-            outline = outline + "1" + binary
+            outline = outline + binary
         else: 
             compileGood = False
             print("compile error on line " + str(i+1) + " invalid input for branch destination")
@@ -335,7 +342,7 @@ for aLine in inputtext:
         break
     outline = outline + "\n"
     outlist.append(outline)
-    i = i + 1 
+
 
 
 if compileGood:
