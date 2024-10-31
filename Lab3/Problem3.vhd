@@ -11,11 +11,10 @@ entity Problem3 is
         augand : in std_logic_vector(7 downto 0);
         cin : in std_logic;
         sum : out std_logic_vector(7 downto 0);
-        cout : out std_logic
-    );
+        cout : out std_logic);
 end entity Problem3;
 
-architecture Behavioral of Problem3 is
+architecture rtl of Problem3 is
     signal carry : std_logic;
     signal temp_sum : std_logic_vector(7 downto 0);
     signal bit_index : integer range 0 to 7 := 0;
@@ -32,11 +31,13 @@ begin
             if bit_index <= 7 then
                 temp_sum(bit_index) <= (addend(bit_index) xor augand(bit_index)) xor carry;
                 carry <= (addend(bit_index) and augand(bit_index)) or (carry and (addend(bit_index) xor augand(bit_index)));
-                bit_index <= bit_index + 1;
+                if bit_index < 7 then
+                    bit_index <= bit_index + 1;
+                end if;
             else
                 sum <= temp_sum;
                 cout <= carry;
             end if;
         end if;
     end process;
-end architecture Problem3; --or just end architecture works
+end architecture rtl; --or just end architecture works

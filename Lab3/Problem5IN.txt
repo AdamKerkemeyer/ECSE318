@@ -1,0 +1,6 @@
+/Problem5IN.txt compiled using the cmdecode.py and the output appears in Problem5OUT.txt
+/The output in Problem5OUT.txt is then read by the ALU and performs the operations as described.
+/
+/12 numbers are stored in memory location 0 to 11. Write a program to reverse the list of
+/numbers by storing the content of memory 11 in memory 0, content of memory 10 in memory 1 ...
+/and content of memory 0 in memory 11.

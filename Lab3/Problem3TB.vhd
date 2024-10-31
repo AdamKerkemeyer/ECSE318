@@ -32,11 +32,11 @@ begin
     -- Clock generation process
     Clk <= not Clk after ClockPeriod / 2;
 
-    -- Testbench sequence
     process
     begin        clear <= '1';
         wait for ClockPeriod;
         clear <= '0';
+        wait for ClockPeriod;
         wait for ClockPeriod;
 
         -- Loop through all possible 8-bit combinations

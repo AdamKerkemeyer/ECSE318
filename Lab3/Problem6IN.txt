@@ -1,0 +1,5 @@
+/Problem6IN.txt compiled using the cmdecode.py and the output appears in Problem6OUT.txt
+/The output in Problem6OUT.txt is then read by the ALU and performs the operations as described.
+/
+/Evaluate C = A*(B+2)
+/A,B,C stored in  memory locations 0, 1, and 2 respectively

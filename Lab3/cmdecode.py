@@ -12,7 +12,6 @@ shift/rotate amounts are entered as decimal numbers between -2048 and 2047
 one intruction per line
 
 Sample code that does nothing but is syntaticaly correct:
-
 nop
 hlt
 ld 0000 101010101010
@@ -350,4 +349,3 @@ if compileGood:
     outputfile = open(input(), mode='w')
     outputfile.writelines(outlist)
     outputfile.close()
-
