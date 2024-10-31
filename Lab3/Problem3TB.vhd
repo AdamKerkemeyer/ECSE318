@@ -67,18 +67,31 @@ begin
                 cout_tb <= '0';
                 sum_tb <= (others => '0'); --this will keep the outputs at zero when we are doing the calculations
 
+                -- Clear and allow the adder to process new values
+                clear <= '1';
+                wait for ClockPeriod;
+                clear <= '0';
+                wait for ClockPeriod;
+
                 -- Loop through each bit (LSB to MSB) for serial addition
-                for i in 0 to 7 loop
-                    addend <= addend_tb(i);
-                    augand <= augand_tb(i);
+                for index in 0 to 7 loop
+                    addend <= addend_tb(index);
+                    augand <= augand_tb(index);
                     cin <= cout_tb;
                     wait for ClockPeriod;
                     -- Capture the result of this bit addition
-                    sum_tb(i) <= sum;
+                    -- Since we update one bit at a time it will look wrong until the final tick on the waveform
+                    sum_tb(index) <= sum;
                     cout_tb <= cout;
                 end loop;
                 --Here is where we display the output (only for one clock pulse)
                 wait for ClockPeriod;
+                --Figured out display statements so now we can see the sum exactly when it is finished
+                --Without needing to decipher the waveform
+                report "Addend: " & integer'image(to_integer(unsigned(addend_tb))) &
+                       " + Augand: " & integer'image(to_integer(unsigned(augand_tb))) &
+                       " = Sum: " & integer'image(to_integer(unsigned(sum_tb))) &
+                       " with Carry-out: " & std_logic'image(cout_tb);
                 wait for ClockPeriod;
             end loop;
         end loop;
