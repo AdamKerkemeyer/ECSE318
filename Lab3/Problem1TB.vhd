@@ -1,8 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use IEEE.STD_LOGIC_TEXTIO.ALL;
-use STD.TEXTIO.ALL;
 
 entity Problem1TB is
 end Problem1TB;
@@ -39,9 +37,9 @@ begin
     -- Stimulus process
     stim_proc: process
         variable i, j : integer;
-        variable l : line;
         variable expectedSum_str, correctSum_str : string(1 to 8);
     begin
+    --The correct output appears on the next clock
         -- Loop through all possible combinations of x and y
         for i in 0 to 255 loop
             for j in 0 to 255 loop
@@ -50,22 +48,18 @@ begin
                 cin <= '0';  -- You can also loop through cin if needed
                 wait for 10 ns;
                 -- Calculate expected sum
-                expectedSum <= std_logic_vector(to_unsigned(i + j, 8));
-                -- Convert std_logic_vector to string
-                write(l, expectedSum);
-                expectedSum_str := l.all;
-                write(l, correctSum);
-                correctSum_str := l.all;
+                --This doesn't seem to be working, I will fix if I have time
+                expectedSum <= std_logic_vector(to_unsigned((i + j), 8));
                 -- Check if correctSum matches expectedSum
                 if correctSum /= expectedSum then
                     report "Mismatch: x=" & integer'image(i) &
-                           ", y=" & integer'image(j) &
-                           ", expectedSum=" & expectedSum_str &
-                           ", correctSum=" & correctSum_str severity error;
+                           ", y=" & integer'image(j) severity error;
+                           --I don't know how to display a std_logic_vector
                 end if;
             end loop;
         end loop;
         -- End simulation
         wait;
     end process;
+
 end sim;
