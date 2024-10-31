@@ -1,0 +1,26 @@
+nop
+hlt
+ld 0000 101010101010
+ld 1111 mem0
+str mem0 111100001111
+str mem1 0011
+bra 24 always
+bra 98 parity
+
+bra 1 even
+bra 7 carry
+bra 2 negative
+bra 4 zero
+bra 9 no_Carry
+bra 3 positive
+xor 0010 1001
+xor 1101 111100001111
+add 0010 1001
+add 1101 111100001111
+rot 0011 6
+rot 0010 -4
+shf 0011 6
+shf 0010 -4
+hlt
+cmp 0010 1001
+cmp 1101 111100001111

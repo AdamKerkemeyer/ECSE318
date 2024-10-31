@@ -10,8 +10,10 @@ Upper/lowercase is ignored
 Branch statement is Immediate branching. The value placed into the mem field is the line of code that will be executed. place a decimal number here
 shift/rotate amounts are entered as decimal numbers between -2048 and 2047
 one intruction per line
+/ is a commment line
 
 Sample code that does nothing but is syntaticaly correct:
+
 nop
 hlt
 ld 0000 101010101010
@@ -26,6 +28,7 @@ bra 2 negative
 bra 4 zero
 bra 9 no_Carry
 bra 3 positive
+/look a comment
 xor 0010 1001
 xor 1101 111100001111
 add 0010 1001
@@ -106,7 +109,7 @@ for i in range(4096):
     else:
         ilist = iline.rsplit(" ")#split the line into a list of strings. Every space is deleted and indicates a new item
     #begin decoding the line
-    if len(ilist) == 0: #skip empty lines
+    if len(ilist) == 0 or iline.startswith("/"): #skip empty lines They will just show up as a no op
         outline = "0000" + "0" + "0" + "00" +"000000000000" + "000000000000"
     elif ilist[0] == "nop" and len(ilist) == 1:
         outline = "0000" + "0" + "0" + "00" +"000000000000" + "000000000000"
@@ -349,3 +352,4 @@ if compileGood:
     outputfile = open(input(), mode='w')
     outputfile.writelines(outlist)
     outputfile.close()
+
