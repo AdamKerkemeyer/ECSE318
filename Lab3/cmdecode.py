@@ -11,6 +11,8 @@ Branch statement is Immediate branching. The value placed into the mem field is 
 shift/rotate amounts are entered as decimal numbers between -2048 and 2047
 one intruction per line
 / is a commment line
+parity flag is true if there are an even number of ones in the result, so branch will execute on even parity
+flags are not reset by non alu 
 
 Sample code that does nothing but is syntaticaly correct:
 
@@ -198,7 +200,7 @@ for i in range(4096):
         outline = outline + "000000000000"
         #destination address aka where the the program will jump to
         #program memorry is stored in 12 bit adresses in PC
-        if isInteger(ilist[1]) and int(ilist[1]) >= 0 and int(ilist[1]) < 2048:
+        if isInteger(ilist[1]) and int(ilist[1]) >= 0 and int(ilist[1]) < 4096:
             binary = format(int(ilist[1]),'b')
             charsNeeded = 12 - len(binary)
             for x in range(charsNeeded): #append 0s to make the adress length 12
