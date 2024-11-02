@@ -92,14 +92,15 @@ def isInteger(input:str): #returns true if a string value could be an integer
         return input.isnumeric()
     
 print("source code file:")
-inputfile = open(input(), mode='r')
+inputfilename = input()
+inputfile = open(inputfilename, mode='r')
 inputtext = inputfile.readlines()
 inputfile.close()
 
 
 compileGood = True
-outlist = []#holds all of the final binary instructions
-for i in range(4096):
+outlist = ["00000000000000000000000000000000\n"]#holds all of the final binary instructions
+for i in range(4095):
     outline = "" #holds the binary for the current line
     if i < len(inputtext):
         iline = removeChar(removeChar(inputtext[i],","),"\n")# The input string for one line
@@ -350,8 +351,15 @@ for i in range(4096):
 
 
 if compileGood:
-    print("compile finished, Output file name:")
-    outputfile = open(input(), mode='w')
-    outputfile.writelines(outlist)
-    outputfile.close()
+    outputfilenameInvalid = True
+    while outputfilenameInvalid:
+        print("compile finished, Output file name:")
+        outputfileName  = input()
+        if outputfileName == inputfilename:
+            print("give your output file a name different than your input file")
+        else:
+            outputfile = open(outputfileName, mode='w')
+            outputfile.writelines(outlist)
+            outputfile.close()
+            outputfilenameInvalid = False
 

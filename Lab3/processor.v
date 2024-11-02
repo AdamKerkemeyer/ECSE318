@@ -74,12 +74,13 @@ module ALUbehave(op, in1, in2, out, flagout);
         4'b0100: begin //xor
             out <= in1 ^ in2;
             carryflag <= 1'b0;
+            $display("did an xor");
         end
         4'b0101: begin //add
-            out <= in1 + in2;
-            if (~in1[31] && ~in2[31] && out[31]) carryflag <= 1'b1; //positive overflow
-            else if (in1[31] && in2[31] && ~out[31]) carryflag <= 1'b1; //negative overflow
-            else carryflag <= 1'b0;
+            out = in1 + in2;
+            if (~in1[31] && ~in2[31] && out[31]) carryflag = 1'b1; //positive overflow
+            else if (in1[31] && in2[31] && ~out[31]) carryflag = 1'b1; //negative overflow
+            else carryflag = 1'b0;
         end
         4'b0110: begin //rotate
             if (in2[3]) begin //negative, rotate left. Miracle if this works
@@ -151,7 +152,7 @@ module processor(prgwrite, prgInstructions, outclk);
     wire [31:0] instrn, outRamData, aluout;
 
     reg countSet, countEN, ramWrite, writeCycle;
-    reg [3:0] regAddress;
+    reg [3:0] regAddress, aluop;
     reg [11:0] newCount, ramAddress;
     reg [31:0] inRamData, aluin1, aluin2, lastinstrn;
 
@@ -163,7 +164,7 @@ module processor(prgwrite, prgInstructions, outclk);
 
     RAM memory(clk, ramAddress, ramWrite, inRamData, outRamData);
     PSR psr(clk, aluflags, flags);
-    ALUbehave alu(instrn[31:28], aluin1, aluin2, aluout, aluflags);
+    ALUbehave alu(aluop, aluin1, aluin2, aluout, aluflags);
 
 
     assign outclk = clk;
@@ -187,6 +188,7 @@ module processor(prgwrite, prgInstructions, outclk);
 
     always @(posedge clk) begin //op code decisions (the fun stuff)
         if (~prgwrite && ~writeCycle) begin //read new op code
+            aluop <= instrn[31:28];
             case(instrn[31:28])
                 4'b0000: begin//nop
                     newCount <= {12{1'b0}};
@@ -422,9 +424,15 @@ module testALU();
         #5
         in1 <= 3; in2 <= 3; op <= 4;
         #5
+        in1 <= 'hFFFFFFFF; in2 <= 0; op <= 4;
+        #5
         in1 <= 1; in2 <= 3; op <= 5;
         #5
         in1 <= 'hFFFFFFFF; in2 <= 'hFFFFFFFF; op <= 5;
+        #5
+        in1 <= 'h7FFFFFFF; in2 <= 'h7FFFFFFF; op <= 5;
+        #5
+        in1 <= 'h80000000; in2 <= 'h80000000; op <= 5;
         #5
         in1 <= 3; in2 <= 1; op <= 6;
         #5

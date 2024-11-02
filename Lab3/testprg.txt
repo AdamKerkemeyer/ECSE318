@@ -1,5 +1,7 @@
+
+/testting
 nop
-hlt
+
 ld 0000 101010101010
 ld 1111 mem0
 str mem0 111100001111
