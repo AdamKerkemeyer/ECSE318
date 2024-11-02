@@ -209,7 +209,6 @@ module processor(prgwrite, prgInstructions, outclk);
                     inRamData <= {32{1'b0}};
                     aluin1 <= {32{1'b0}};
                     aluin2 <= {32{1'b0}};
-                    $display("outRamData: %h", outRamData);
                     if (instrn[27]) begin
                         writeCycle <= 1'b0;
                         countEN <= 1'b1;
@@ -244,6 +243,7 @@ module processor(prgwrite, prgInstructions, outclk);
                         3'b000: begin//allways
                             countSet <= 1'b1;
                             newCount <= instrn[11:0];
+                            $display("branching always");
                         end
                         3'b001: begin//parity
                             countSet <= flags[1];
@@ -264,6 +264,7 @@ module processor(prgwrite, prgInstructions, outclk);
                         3'b101: begin//zero
                             countSet <= flags[4];
                             newCount <= flags[4] ? instrn[11:0] : {12{1'b0}};
+                            $display("branching zero");
                         end
                         3'b110: begin //no carry
                             countSet <= ~flags[0];
@@ -351,6 +352,7 @@ module processor(prgwrite, prgInstructions, outclk);
             endcase
         end
         else if (~prgwrite) begin//write to registers after a alu op
+            aluop <= instrn[31:28];
             newCount <= {12{1'b0}};
             ramWrite <= 1'b0;
             countEN <= 1'b1;

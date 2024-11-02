@@ -1,5 +1,4 @@
-/Problem6IN.txt compiled using the cmdecode.py and the output appears in Problem6OUT.txt
-/The output in Problem6OUT.txt is then read by the ALU and performs the operations as described.
+/Problem6IN.txt compiled using the cmdecode.py and the output and the output performs the operations as described.
 /
 /Evaluate C = A*(B+2)
 /A,B,C stored in  memory locations 0, 1, and 2 respectively
@@ -36,14 +35,19 @@ ld 0001 memory0
 /For this to work we assume that B is greater or equal to -1
 /
 /We need to load -1 into register 3 to be used to decrement register 0 (B + 2)
-ld 0011 111111111110
+ld 0100 000000000000
+cmp 0011 0100
+/Initialize reg 2 to 0 as our working count
+ld 0010 000000000000
 /add register 1 contents (A) to register 2 
-add 0010 0010
+add 0010 0001
 /decrement register 0 (B + 2) by 1
 add 0000 0011
 /Check to see if register 0 is zero yet
-/Branch says if condition code zero is met (last calculation resulted in zero) return to line 41
-bra 41 zero 
+/Branch says if condition code zero is met (last calculation resulted in zero) go to line 50, otherwise keep looping
+bra 50 zero
+bra 43 always
 /
 /Store the result (C = A * (B + 2)) in memory2
-str memory2 0000
+str memory2 0010
+hlt
