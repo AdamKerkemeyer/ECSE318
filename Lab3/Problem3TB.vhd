@@ -75,6 +75,7 @@ begin
             cout_tb <= cout;
         end loop;
         wait for ClockPeriod;
+        --It works in the normal loop. Not sure why there is data loss in the first addition.
         report "Addend: 7 + Augand: 3 = Sum: " & integer'image(to_integer(unsigned(sum_tb))) & 
                " with Carry-out: " & std_logic'image(cout_tb);
         wait for ClockPeriod;

@@ -30,8 +30,8 @@ begin
                 flag <= '1'; -- set flag so cin is only used once
             end if;
             sum <= addend xor augand xor carry;
-            carry := (addend and carry) or (augand and carry) or (addend and augand);
             cout <= carry; -- output the carry for the current operation
+            carry := (addend and carry) or (augand and carry) or (addend and augand);
         end if;
     end process;
 end architecture rtl;
