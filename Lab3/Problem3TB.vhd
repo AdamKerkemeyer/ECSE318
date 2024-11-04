@@ -49,13 +49,67 @@ begin
     Clk <= not Clk after ClockPeriod / 2; --This is technically a process but we can write it without that formatting
 
     stimming : process
-    begin        
+    begin   
+        --First explicitly test 7 + 3 and 6 + 4
+        clear <= '1'; --At beginning of simulation clear out signals
+        wait for ClockPeriod;
+        clear <= '0';
+        wait for ClockPeriod;
+
+        -- Test case for adding 7 and 3
+        addend_tb <= std_logic_vector(to_unsigned(7, 8));
+        augand_tb <= std_logic_vector(to_unsigned(3, 8));
+        cin <= '0';
+        cout_tb <= '0';
+        sum_tb <= (others => '0');  
+        clear <= '1';
+        wait for ClockPeriod;
+        clear <= '0';
+        wait for ClockPeriod;
+        for index in 0 to 7 loop
+            addend <= addend_tb(index);
+            augand <= augand_tb(index);
+            cin <= cout_tb;
+            wait for ClockPeriod;
+            sum_tb(index) <= sum;
+            cout_tb <= cout;
+        end loop;
+        wait for ClockPeriod;
+        report "Addend: 7 + Augand: 3 = Sum: " & integer'image(to_integer(unsigned(sum_tb))) & 
+               " with Carry-out: " & std_logic'image(cout_tb);
+        wait for ClockPeriod;
+
+        -- Test case for adding 6 and 4
+        addend_tb <= std_logic_vector(to_unsigned(6, 8));
+        augand_tb <= std_logic_vector(to_unsigned(4, 8));
+        cin <= '0';
+        cout_tb <= '0';
+        sum_tb <= (others => '0');
+        -- Clear and allow the adder to process new values
+        clear <= '1';
+        wait for ClockPeriod;
+        clear <= '0';
+        wait for ClockPeriod;
+        -- Perform bitwise addition for 6 + 4
+        for index in 0 to 7 loop
+            addend <= addend_tb(index);
+            augand <= augand_tb(index);
+            cin <= cout_tb;
+            wait for ClockPeriod;
+            sum_tb(index) <= sum;
+            cout_tb <= cout;
+        end loop;
+        wait for ClockPeriod;
+        report "Addend: 6 + Augand: 4 = Sum: " & integer'image(to_integer(unsigned(sum_tb))) & 
+               " with Carry-out: " & std_logic'image(cout_tb);
+        wait for ClockPeriod;
+
         clear <= '1'; --At begining of simulation clear out signals
         wait for ClockPeriod;
         clear <= '0';
         wait for ClockPeriod;
 
-        -- Loop through all possible 8-bit combinations
+        -- Loop through all possible 8-bit combinations now
         for i in 0 to 255 loop
             for j in 0 to 255 loop
                 -- Set the 8-bit values for addend_tb and augand_tb
