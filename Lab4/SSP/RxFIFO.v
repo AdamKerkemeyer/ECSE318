@@ -8,7 +8,7 @@ Data recieved should be written to FIFO in as few cycles as possible
 */
 
 module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, SSPCLKIN, SSPFSSIN, SSPRXD
-        PRDATA[7:0], SSPOE_B, SSPCLKOUT, SSPFSSOUT, SSPRXINTR);
+        PRDATA[7:0], SSPOE_B, SSPCLKOUT, SSPRXINTR);
     //Input is first row, output is second
     input PCLK; //Clock for SSP (all operations on FIFO and interface are done on this clock)
     input CLEAR_B; //Low active clear used to initialize SSP
@@ -26,11 +26,47 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, SSPCLKIN, SSPFSSIN, SSPRXD
     output SSPOE_B; //Active low output enable. It will go low on negative edge of SSPCLKOUT
     //It will go back up on the negative edge of SSPCLKOUT after data transfer (tell when transmission is done)
     output SSPCLKOUT; //Connected to SSPCLKIN, 1/2 speed of PCLK
-    output SSPFSSOUT; //Frame control signal for transmission
     //Once bottom entry of Tx FIFO is written to  SSPFSSOUT is pulsed high for one SSPCLKOUT period
     //The value to be transmitted will be shifted into serial shift register during this pulse. 
     //On next SSPCLKOUT rising edge the MSB of PWDATA is shifed onto SSPTXD pin
     output SSPRXINTR; //If full pull SSPRXINTR high and refuse to accept any additional data, lower when not full
 
+    //Define internal variables here:
+    reg [7:0] FIFO [3:0]; //4 bytes of recieving FIFO 
+    integer count; //remember which spot in FIFO memory is filled (start at 0, increase each time we recieve)
+    //decrement evert time the processor reads the memory?
+
+    always @(posedge PCLK) begin
+        if (PSEL) begin //Cannot do anything if enable is not high first
+            if (!CLEAR_B) begin //if active low reset is low, reset everything first
+                integer i; //for loop to visit every spot in FIFO and wipe
+                for (i = 0; i < 8; i = i+1) begin
+                    FIFO[i] = 8'b00000000;
+                end
+                //also reset all internal variables
+                count = 0;
+            end
+            else if (!PWRITE && count >= 1) begin //Here is where processor reads from FIFO (parallel)
+                PRDATA = FIFO[count];
+                FIFO[count] = 8'b00000000; //Zero out memory in FIFO
+                count = count - 1;
+            end
+        end
+        //Outside of PSEL (We can read regardless of if FIFO is being accessed by processor)
+        if(!PWRITE && !SSPRXINTR) begin //ensure no interupt (otherwise we cannot read anymore) and we are in write mode
+            
+
+
+        end
+    end
+
+    
+    always @(negedge PCLK) begin
+         //Set SSPRXINTR on negative edge to prevent interrupting signal
+         if (count >= 4) begin
+             SSPRXINTR = b'1; //initialized to zero in SSP.v
+         end
+        
+    end
 
 endmodule
