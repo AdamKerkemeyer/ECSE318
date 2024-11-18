@@ -27,7 +27,7 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
     input [7:0] TXDATA;         //From Tx, byte to transmit.
     output [7:0] RXDATA;        //To Rx, byte recieved.
 
-    //Internal variables:
+    //SSPCLKOUT:
     reg slowCLK = 1'b0;
     assign SSPCLKOUT = slowCLK; 
 
@@ -39,9 +39,12 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
     reg [7:0] transmit = 8'b00000000;
     reg TxWrite;
     reg sspoeB;
-    reg beginTransmit;
-    reg [3:0] TxCount = 4'b0000;      //Remember how many shifts have occured
+    wire beginTransmit;
+    reg [3:0] TxShiftCount = 4'b0000;       //Remember how many shifts have occured
+    reg TxState = 2'b00;                    //0 for idle, 1 for load, 2 for shifting
     
+    beginTransmit = (TxState == 2'b01) || (ShiftCount == 8);
+
     assign SSPOE_B = sspoeB;
     assign TxLOGICWRITE = TxWrite;
     assign SSPFSSOUT = beginTransmit;
@@ -53,14 +56,72 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
     3. TxLOGICWRITE is set to high (TxWrite <= 1)
     4. CLEAR_B is high (active low)
     */
-    always @(posedge PCLK) begin
-        
+    always @(*) begin                       //MSB is sent first
+        if(!slowCLK) begin                  //SSPCLKOUT is low
+            if(TxState == 2'b00) begin      //idle
+                if(!TxEMPTY) begin          //Can transmit if currently idle and transmit is loaded
+                    TxState <= 2'b01;       //State becomed loading
+                end
+                else begin
+                    TxState <= 2'b00;       //Do nothing
+                end
+            end
+            else if(TxState == 2'b01) begin //Tx state is load
+                TxState <= 2'b10;           //Go to shifting mode
+            end
+            else if(TxState == 2'b10) begin
+                if(TxShiftCount < 6) begin  //Normal behavior for first 7 bits.
+                    TxShiftCount = TxShiftCount + 1'b1;
+                end
+                else if(TxShiftCount == 6) begin
+                    if(!TxEMPTY) begin
+                        TxShiftCount = 8;   //Immediately go into sending another transmission
+                    end
+                    else begin
+                        TxShiftCount = TxShiftCount + 1'b1;
+                    end
+                end
+                else if(TxShiftCount == 7) begin
+                    TxShiftCount <= 0;      //Reset counter
+                    TxState <= 0;           //Return to idle after sending
+                end
+                else if(TxShiftCount == 8) begin //Special case
+                    TxShiftCount <= 0;      //Don't leave sending state, go into another send immediately
+                end
+                else begin                  //Catch all
+                    TxState <= 0;           //Break and return to idle (give up on transmission)
+                end
+            end
+            //Otherwise do nothing
+        end
+        //Tell Tx another word is coming (TxWrite is tied to TxLOGICWRITE)
+        TxWrite <= ((slowCLK == 1'b0) && (beginTransmit == 1'b1)); 
     end
-    always @(*) begin                   //MSB is sent first
-        if(!slowCLK) begin              //SSPCLKOUT is low
+    //Transmit that should only run on PCLK:
+    always @(posedge PCLK) begin
+        if(!slowCLK) begin
+            if(TxState == 2'b01) begin      //In either if or else if, load new value in. 
+                transmit <= TxDATA;
+            end
+            else if(TxState == 2'b10 && TxShiftCount == 8) begin
+                transmit <= TxDATA;
+            end
+            else begin                      //If we aren't loading we are sending via shifting
+                transmit <= {transmit[ 6: 0 ], 1'b0};   //Remember the SSPTXD assign we made.
+            end
+        end
 
+        if(beginTransmit && slowCLK) begin
+            sspoe_b <= 1'b0;
+        end
+        else if(TxState == 2'b00 && slowCLK) begin
+            sspoe_b <= 1'b1;                //Pulse high
+        end
+        else begin
+            sspoe_b <= sspoe_b;             //Do nothing
         end
     end
+    
     //Recieve
     reg [7:0] recieve = 8'b00000000;
 
@@ -75,145 +136,6 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
             RxData <= 8'b00000000;
             TxLOGICWRITE <= 0;
             RxLOGICWRITE <= 0;
-            
         end
     end
-endmodule
-
-`timescale 1 ns / 10 ps
-
-module ssp_tx_rx (
-    input PCLK,
-    input CLEAR_B,
-    input SSPCLKIN, SSPFSSIN, SSPRXD,
-    input [7:0] TxData,
-    input TxValidWord, TxIsEmpty,
-    output TxNextWord,
-    output [7:0] RxData,
-    output RxNextWord,
-    output SSPCLKOUT, SSPFSSOUT, SSPTXD, SSPOE_B
-);
-
-reg ssp_out_clk_div = 1'b0;
-assign SSPCLKOUT = ssp_out_clk_div;
-
-always @(posedge PCLK) ssp_out_clk_div <= ~ssp_out_clk_div;
-
-wire update_state = (ssp_out_clk_div == 1'b0);
-wire pre_update_state = (ssp_out_clk_div == 1'b1);
-
-reg [7:0] shift_out = 8'b0;
-reg TxNextWord_lcl, SSPOE_B_lcl;
-reg [3:0] tx_state, tx_next_state;
-parameter [3:0]
-    tx_idle = 4'd0, tx_load = 4'd1, tx_shift7 = 4'd2, tx_shift6 = 4'd3,
-    tx_shift5 = 4'd4, tx_shift4 = 4'd5, tx_shift3 = 4'd6, tx_shift2 = 4'd7,
-    tx_shift1 = 4'd8, tx_shift0 = 4'd9, tx_shift0_load = 4'd10;
-
-wire tx_loading = (tx_state == tx_load) || (tx_state == tx_shift0_load);
-
-assign SSPTXD = shift_out[7];
-assign TxNextWord = TxNextWord_lcl;
-assign SSPOE_B = SSPOE_B_lcl;
-assign SSPFSSOUT = tx_loading;
-
-always @(posedge PCLK) begin
-    if (~CLEAR_B)
-        tx_state <= tx_idle;
-    else
-        tx_state <= tx_next_state;
-end
-
-always @(*) begin
-    if (update_state) begin
-        case (tx_state)
-            tx_idle: tx_next_state <= ~TxIsEmpty ? tx_load : tx_idle;
-            tx_load: tx_next_state <= tx_shift7;
-            tx_shift7: tx_next_state <= tx_shift6;
-            tx_shift6: tx_next_state <= tx_shift5;
-            tx_shift5: tx_next_state <= tx_shift4;
-            tx_shift4: tx_next_state <= tx_shift3;
-            tx_shift3: tx_next_state <= tx_shift2;
-            tx_shift2: tx_next_state <= tx_shift1;
-            tx_shift1: tx_next_state <= ~TxIsEmpty ? tx_shift0_load : tx_shift0;
-            tx_shift0: tx_next_state <= tx_idle;
-            tx_shift0_load: tx_next_state <= tx_shift7;
-            default: tx_next_state <= tx_idle;
-        endcase
-    end else
-        tx_next_state <= tx_state;
-end
-
-always @(posedge PCLK) begin
-    if (update_state) begin
-        case (tx_state)
-            tx_load, tx_shift0_load: shift_out <= TxData;
-            default: shift_out <= {shift_out[6:0], 1'b0};
-        endcase
-    end
-end
-
-always @(*) TxNextWord_lcl <= update_state && tx_loading;
-
-always @(posedge PCLK) begin
-    if (tx_loading && pre_update_state)
-        SSPOE_B_lcl <= 1'b0;
-    else if ((tx_state == tx_idle) && pre_update_state)
-        SSPOE_B_lcl <= 1'b1;
-end
-
-reg [7:0] shift_in = 8'b0;
-reg RxNextWord_lcl;
-reg SSPCLKIN_prev;
-reg [3:0] rx_state, rx_next_state;
-parameter [3:0]
-    rx_idle = 4'd0, rx_shift7 = 4'd1, rx_shift6 = 4'd2, rx_shift5 = 4'd3,
-    rx_shift4 = 4'd4, rx_shift3 = 4'd5, rx_shift2 = 4'd6, rx_shift1 = 4'd7,
-    rx_shift0 = 4'd8;
-
-assign RxData = shift_in;
-assign RxNextWord = RxNextWord_lcl;
-
-always @(posedge PCLK) SSPCLKIN_prev <= SSPCLKIN;
-
-wire SSPCLKIN_fall = SSPCLKIN_prev && ~SSPCLKIN;
-wire SSPCLKIN_rise = ~SSPCLKIN_prev && SSPCLKIN;
-
-always @(posedge PCLK) begin
-    if (~CLEAR_B)
-        rx_state <= rx_idle;
-    else
-        rx_state <= rx_next_state;
-end
-
-always @(*) begin
-    if (SSPCLKIN_fall) begin
-        case (rx_state)
-            rx_idle: rx_next_state <= SSPFSSIN ? rx_shift7 : rx_idle;
-            rx_shift7: rx_next_state <= rx_shift6;
-            rx_shift6: rx_next_state <= rx_shift5;
-            rx_shift5: rx_next_state <= rx_shift4;
-            rx_shift4: rx_next_state <= rx_shift3;
-            rx_shift3: rx_next_state <= rx_shift2;
-            rx_shift2: rx_next_state <= rx_shift1;
-            rx_shift1: rx_next_state <= rx_shift0;
-            rx_shift0: rx_next_state <= SSPFSSIN ? rx_shift7 : rx_idle;
-            default: rx_next_state <= rx_idle;
-        endcase
-    end else
-        rx_next_state <= rx_state;
-end
-
-always @(posedge PCLK) begin
-    if (SSPCLKIN_fall)
-        shift_in <= {shift_in[6:0], SSPRXD};
-end
-
-always @(posedge PCLK) begin
-    if ((rx_state == rx_shift0) && SSPCLKIN_rise)
-        RxNextWord_lcl <= 1'b1;
-    else
-        RxNextWord_lcl <= 1'b0;
-end
-
 endmodule
