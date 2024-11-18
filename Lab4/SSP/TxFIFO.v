@@ -1,9 +1,10 @@
 /*
-Transmit & Recieve Logic:
-Transmit seciton will read bytes from transmit FIFO and perform parallel to series conversion
-Transmit is synchronyzed to the SSPCLKOUT through SSPTXD and SSPFSSOUT pins
-Recieve logic is synchronyzed by SSPCLKIN which is recieved by broadcasting from peripheral
-Recieve logic performs serial to parallel conversion on incoming synchronous SSPRXD data stream
+Transmit FIFO: (parallel to series)
+FIFO 8-bit wide, 4-location deep memory buffer
+Data written to SSP module will be stored in the buffer until it is read out by the transmit logic
+If full pull SSPTXINTR high, do not accept additional data when SSPTXINTR is high, lower when not full
+Do not consider the case of a read request on an empty FIFO
+Data written to FIFO should be transferred to transfer logic in as few cycles as possible
 */
 
 module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from processor
