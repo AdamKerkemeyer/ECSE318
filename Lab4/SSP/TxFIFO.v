@@ -8,7 +8,7 @@ Data written to FIFO should be transferred to transfer logic in as few cycles as
 */
 
 module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from processor
-        TXDATA, SSPTXINTR, EMPTY);
+        TxDATA, SSPTXINTR, EMPTY);
     input PCLK;                             //Clock for SSP (all operations on FIFO and interface are done on this clock)
     input CLEAR_B;                          //Low active clear used to initialize SSP
     input PSEL;                             //Chip select signal, data can only enter or exit SSP when PSEL is high.
@@ -16,7 +16,7 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
     input [7:0] PWDATA;                     //Data to transmitt from processor
     input LOGICWRITE;
 
-    output [7:0] TXDATA;                    //Tell Rx/Tx logic what byte to transmit.
+    output [7:0] TxDATA;                    //Tell Rx/Tx logic what byte to transmit.
     output SSPTXINTR;                       //If full pull SSPTXINTR high and refuse to accept any additional data, lower when not full, interrupt 
     output EMPTY;
 
@@ -28,7 +28,7 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
 
     assign SSPRXINTR = full;                //Using "=" lets us tie SSPRXINTR to if the FIFO is full
     assign EMPTY = empty;                   //
-    assign TXDATA = FIFO[R_PTR];            //If PWRITE is 0 processor will still be able to access whatever the read pointer is at
+    assign TxDATA = FIFO[R_PTR];            //If PWRITE is 0 processor will still be able to access whatever the read pointer is at
     integer i;
 
     always @(posedge PCLK) begin
@@ -50,7 +50,7 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
             2. The processor requests to write and the Tx/Rx logic does not want to send
             3. The processor does not request to write and the Tx/Rx logic wants to send
             4. The processor does not request to write and the Tx/Rx logic does not want to send (do nothing)
-            In no loop do we directly update TXDATA because we already assigned it to always be linked to the Read pointer
+            In no loop do we directly update TxDATA because we already assigned it to always be linked to the Read pointer
             */
             else if (PWRITE && LOGICWRITE) begin
                 R_PTR <= R_PTR + 2'b01;

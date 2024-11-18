@@ -48,14 +48,14 @@ module SSP(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD
     //Connect Rx inputs to Tx outputs, this will happen in TB however, don't directly implement them
     
     wire TxLOGICWRITE, RxLOGICWRITE, TxEMPTY;
-    wire [7:0] rxData, txData;
+    wire [7:0] rxDATA, txDATA;
 
     Rx_FIFO rx(
         .PCLK(PCLK),
         .CLEAR_B(CLEAR_B),
         .PSEL(PSEL),
         .PWRITE(PWRITE),
-        .RxData(RxData),
+        .RxDATA(RxDATA),
         .LOGICWRITE(RxLOGICWRITE),
         .PRDATA(PRDATA),
         .SSPRXINTR(SSPRXINTR)
@@ -68,9 +68,8 @@ module SSP(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD
         .PWRITE(PWRITE),
         .PWDATA(PWDATA),
         .LOGICWRITE(TxLOGICWRITE),
-        .ValidWord(TxValidWord),
-        .IsEmpty(TxIsEmpty),
-        .TxData(TxData),
+        .EMPTY(TxEMPTY),
+        .TxDATA(TxDATA),
         .SSPTXINTR(SSPTXINTR)
     );
 

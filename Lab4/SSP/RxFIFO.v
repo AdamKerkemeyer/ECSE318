@@ -7,13 +7,13 @@ Do not consider the case of a read request on an empty FIFO
 Data recieved should be written to FIFO in as few cycles as possible
 */
 
-module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RXDATA, LOGICWRITE,//PCLK, CLEAR_B, PSEL, and PWRITE are from processor ,RXDATA is from t/r logic
+module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE,//PCLK, CLEAR_B, PSEL, and PWRITE are from processor ,RxDATA is from t/r logic
         PRDATA, SSPRXINTR);
     input PCLK;                 //Clock for SSP (all operations on FIFO and interface are done on this clock)
     input CLEAR_B;              //Low active clear used to initialize SSP
     input PSEL;                 //Chip select signal, data can only enter or exit SSP when PSEL is high.
     input PWRITE;               //If 1 then it is writting to SSP to transmit
-    input [7:0] RXDATA;         //Transmit/Recieve logic is putting this into a byte for us, Rx just must keep track of the FIFO.
+    input [7:0] RxDATA;         //Transmit/Recieve logic is putting this into a byte for us, Rx just must keep track of the FIFO.
     input LOGICWRITE;           //INTERNAL, tell if Rx/Tx logic has something to write to Rx.
 
     output [7:0] PRDATA;        //Where output data is written and then read by processor
@@ -52,7 +52,7 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RXDATA, LOGICWRITE,//PCLK, CLEAR_B, P
             else if (!PWRITE && LOGICWRITE) begin
                 R_PTR <= R_PTR + 2'b01;
                 W_PTR <= W_PTR + 2'b01;
-                FIFO[W_PTR] <= RXDATA;
+                FIFO[W_PTR] <= RxDATA;
                 //full-ness status does not change
             end
             else if (!PWRITE) begin
@@ -64,7 +64,7 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RXDATA, LOGICWRITE,//PCLK, CLEAR_B, P
                //Since there is no request to also read, we must see if the register is full first
                if(!full) begin
                     W_PTR <= W_PTR + 2'b01;
-                    FIFO[W_PTR] <= RXDATA;
+                    FIFO[W_PTR] <= RxDATA;
                     count <= count + 1;
                 end
             end
