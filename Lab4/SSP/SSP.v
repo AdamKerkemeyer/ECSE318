@@ -10,13 +10,12 @@ input ports: PCLK, CLEAR\_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPR
 output ports: PRDATA[7:0], SSPOE\_B, SSPTXD, SSPCLKOUT, SSPFSSOUT, \\SSPTXINTR, SSPRXINTR
 
 My plan:
-Write a TB for each module since there will likely be issues in both
-Rx will be like opposite of Tx
-SSP will create an instance of both the Rx and Tx it will control
-Or I can make a transmit/recieve logic seperately if that will be easier and have SSP instantiate all 3.
-The SSP Tb will only directly interface with the SSP but some wires will pass through?
+(if time) write a TB for each module since there will likely be issues in both
+Rx will be like opposite of Tx, these will both only manage the FIFO.
+Create seperate logic for sending and recieving the signals by bit
+The SSP Tb will only directly interface with the SSP but some wires will pass through
 */
-module SSP(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD
+module SSP(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
         PRDATA[7:0], SSPOE_B, SSPTXD, SSPCLKOUT, SSPFSSOUT, SSPTXINTR, SSPRXINTR);
                         //Input is first row, output is second
     input PCLK;         //Clock for SSP (all operations on FIFO and interface are done on this clock)
