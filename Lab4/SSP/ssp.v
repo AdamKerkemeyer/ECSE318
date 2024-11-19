@@ -15,8 +15,8 @@ Rx will be like opposite of Tx, these will both only manage the FIFO.
 Create seperate logic for sending and recieving the signals by bit
 The SSP Tb will only directly interface with the SSP but some wires will pass through
 */
-module ssp(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
-        PRDATA[7:0], SSPOE_B, SSPTXD, SSPCLKOUT, SSPFSSOUT, SSPTXINTR, SSPRXINTR);
+module ssp(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, SSPCLKIN, SSPFSSIN, SSPRXD,
+        PRDATA, SSPOE_B, SSPTXD, SSPCLKOUT, SSPFSSOUT, SSPTXINTR, SSPRXINTR);
                         //Input is first row, output is second
     input PCLK;         //Clock for SSP (all operations on FIFO and interface are done on this clock)
     input CLEAR_B;      //Low active clear used to initialize SSP
@@ -25,13 +25,13 @@ module ssp(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
                         //Anything in FIFO should finish being sent or recieved before stopping.
                         //Can we use the interrupt flags for this?
     input PWRITE;       //If 1 then it is writting to SSP to transmit
-    input PWDATA[7:0];  //8-bit data to be transmitted
+    input [7:0] PWDATA;  //8-bit data to be transmitted
     input SSPCLKIN;     //Sync clock for recieving data, 1/2 speed of PCLK
     input SSPFSSIN;     //Frame control signal for reception
                         //Data can be recieved at next rising edge of SSPCLKIN once this is high, the reciever od SSPFSSOUT
     input SSPRXD;       //Serial Data in wire
 
-    output PRDATA[7:0]; //Where output data is written
+    output [7:0] PRDATA;//Where output data is written
     output SSPOE_B;     //Active low output enable. It will go low on negative edge of SSPCLKOUT
                         //It will go back up on the negative edge of SSPCLKOUT after data transfer (tell when transmission is done)
     output SSPTXD;      //Serial data out wire
@@ -49,7 +49,7 @@ module ssp(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
     wire TxLOGICWRITE, RxLOGICWRITE, TxEMPTY;
     wire [7:0] RxDATA, TxDATA;
 
-    Rx_FIFO rx(
+    RxFIFO rx(
         .PCLK(PCLK),
         .CLEAR_B(CLEAR_B),
         .PSEL(PSEL),
@@ -60,7 +60,7 @@ module ssp(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
         .SSPRXINTR(SSPRXINTR)
    );
 
-    Tx_FIFO Tx(
+    TxFIFO Tx(
         .PCLK(PCLK),
         .CLEAR_B(CLEAR_B),
         .PSEL(PSEL),
@@ -72,7 +72,7 @@ module ssp(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
         .SSPTXINTR(SSPTXINTR)
     );
 
-    Logic logic(
+    logic logic(
         .PCLK(PCLK),
         .SSPCLKIN(SSPCLKIN),
         .CLEAR_B(CLEAR_B),

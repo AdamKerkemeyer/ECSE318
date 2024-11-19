@@ -7,7 +7,7 @@ Do not consider the case of a read request on an empty FIFO
 Data recieved should be written to FIFO in as few cycles as possible
 */
 
-module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE,//PCLK, CLEAR_B, PSEL, and PWRITE are from processor ,RxDATA is from t/r logic
+module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE, //PCLK, CLEAR_B, PSEL, and PWRITE are from processor ,RxDATA is from t/r logic
         PRDATA, SSPRXINTR);
     input PCLK;                 //Clock for SSP (all operations on FIFO and interface are done on this clock)
     input CLEAR_B;              //Low active clear used to initialize SSP
