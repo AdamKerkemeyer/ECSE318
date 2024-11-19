@@ -42,7 +42,9 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
     wire beginTransmit;
     reg [3:0] TxShiftCount = 4'b0000;       //Remember how many shifts have occured
     reg TxState = 2'b00;                    //0 for idle, 1 for load, 2 for shifting
-    
+    initial begin
+        sspoeB <= 1'b1;                     //Low active output enable
+    end
     assign SSPOE_B = sspoeB;
     assign TxLOGICWRITE = TxWrite;
     assign SSPFSSOUT = beginTransmit;

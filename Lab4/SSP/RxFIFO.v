@@ -22,8 +22,12 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE, //PCLK, CLEAR_B, 
     //Define internal variables here:
     reg [7:0] FIFO [3:0];       //4 bytes of recieving FIFO 
     reg [1:0] W_PTR, R_PTR;     //read (for sending processor data) and write pointer (coming from logic)
-    reg full = 0;               //Set to 1 if we have 4 elements, (could also use a counter, but we can figure that out with pointers)
-    integer count = 0;
+    reg full;               //Set to 1 if we have 4 elements, (could also use a counter, but we can figure that out with pointers)
+    integer count;
+    initial begin
+        full <= 0;
+        count <= 0;
+    end
 
     assign SSPRXINTR = full;    //Using "=" lets us tie SSPRXINTR to if the FIFO is full
 

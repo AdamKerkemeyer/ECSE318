@@ -24,9 +24,14 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
     reg [7:0] FIFO [3:0];                   //4 bytes of recieving FIFO 
     reg [1:0] W_PTR, R_PTR;                 //read (for sending processor data) and write pointer (coming from logic)
     reg full, empty;                        //Unlike Rx must keep track of both full & empty
-    integer count = 0;
+    integer count;
+    initial begin
+        full <= 1'b0;
+        empty <= 1'b1;
+        count <= 0;
+    end
 
-    assign SSPRXINTR = full;                //Using "=" lets us tie SSPRXINTR to if the FIFO is full
+    assign SSPTXINTR = full;                //Using "=" lets us tie SSPRXINTR to if the FIFO is full
     assign EMPTY = empty;                   //
     assign TxDATA = FIFO[R_PTR];            //If PWRITE is 0 processor will still be able to access whatever the read pointer is at
     integer i;
