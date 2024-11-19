@@ -28,20 +28,17 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
     output [7:0] RxDATA;        //To Rx, byte recieved.
 
     //SSPCLKOUT:
-    reg slowCLK = 1'b0;
+    reg slowCLK <= 1'b0;
     assign SSPCLKOUT = slowCLK; 
-
-    //Even though we output a slow clock, the system should run at PCLK, need to remember slowCLK state however:
-    wire highSlowCLJ = (slowCLK == 1'b1);   
 
     //For the sake of readability I am going to put transmit and recieve in two seperate always blocks with seperate declarations
     //Transmission:
-    reg [7:0] transmit = 8'b00000000;
+    reg [7:0] transmit <= 8'b00000000;
     reg TxWrite;
     reg sspoeB;
     wire beginTransmit;
-    reg [3:0] TxShiftCount = 4'b0000;       //Remember how many shifts have occured
-    reg TxState = 2'b00;                    //0 for idle, 1 for load, 2 for shifting
+    reg [3:0] TxShiftCount <= 4'b0000;       //Remember how many shifts have occured
+    reg TxState <= 2'b00;                    //0 for idle, 1 for load, 2 for shifting
     initial begin
         sspoeB <= 1'b1;                     //Low active output enable
     end
@@ -124,12 +121,12 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
     assign beginTransmit = (TxState == 2'b01) || (TxShiftCount == 8);
 
     //Recieve
-    reg [7:0] recieve = 8'b00000000;
+    reg [7:0] recieve <= 8'b00000000;
     reg RxRead;                             //assign to RxLOGICWRITE
     wire beginReceive;
     reg pastSSPCLKIN;
-    reg [3:0] RxShiftCount = 4'b0000;       //Remember how many shifts have occured
-    reg RxState = 2'b00;                    //0 for idle, 1 for load, 2 for shifting
+    reg [3:0] RxShiftCount <= 4'b0000;       //Remember how many shifts have occured
+    reg RxState <= 2'b00;                    //0 for idle, 1 for load, 2 for shifting
     
     assign beginReceive = ((RxState == 2'b01) || (RxShiftCount == 8));
 
