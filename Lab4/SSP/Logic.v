@@ -83,13 +83,13 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
                 end
                 else if(TxShiftCount == 7) begin
                     TxShiftCount <= 0;      //Reset counter
-                    TxState <= 0;           //Return to idle after sending
+                    TxState <= 2'b00;           //Return to idle after sending
                 end
                 else if(TxShiftCount == 8) begin //Special case
                     TxShiftCount <= 0;      //Don't leave sending state, go into another send immediately
                 end
                 else begin                  //Catch all
-                    TxState <= 0;           //Break and return to idle (give up on transmission)
+                    TxState <= 2'b00;           //Break and return to idle (give up on transmission)
                 end
             end
             //Otherwise do nothing
@@ -107,7 +107,7 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
                 transmit <= TxDATA;
             end
             else begin                      //If we aren't loading we are sending via shifting
-                transmit <= {transmit[ 6: 0 ], 1'b0};   //Remember the SSPTXD assign we made.
+                transmit <= {transmit[6:0], 1'b0};   //Remember the SSPTXD assign we made.
             end
         end
 
@@ -122,56 +122,46 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
         end
     end
 
+
     //Recieve
     reg [7:0] recieve = 8'b00000000;
-    reg RxRead;
+    reg RxRead;                             //assign to RxLOGICWRITE
     wire beginReceive;
+    reg pastSSPCLKIN;
     reg [3:0] RxShiftCount = 4'b0000;       //Remember how many shifts have occured
     reg RxState = 2'b00;                    //0 for idle, 1 for load, 2 for shifting
     
     beginReceive = (RxState == 2'b01) || (ShiftCount == 8);
 
+    assign RxDATA = recieve;                //Continual assignment for the data (passed to RxFIFO)
     assign RxLOGICWRITE = RxRead;
-    assign SSPFSSOUT = beginReceive;
-    assign SSPTXD = transmit[7];    //Whatever is in last spot of recieve register will be on wire
-    /*
-    For the transmission to work, we need a number of things to be true:
-    1. Tx FIFO is not empty (~TxEMPTY)
-    2. PWRITE is 1
-    3. TxLOGICWRITE is set to high (RxRead <= 1)
-    4. CLEAR_B is high (active low)
-    */
+
+    wire SSPCLKIN_rising  = SSPCLKIN && ~pastSSPCLKIN
+    wire SSPCLKIN_falling = ~SSPCLKIN && pastSSPCLKIN
+
     always @(*) begin                       //MSB is sent first
-        if(!slowCLK) begin                  //SSPCLKOUT is low
+        if(SSPCLKIN_falling) begin          
             if(RxState == 2'b00) begin      //idle
-                if(!TxEMPTY) begin          //Can recieve if currently idle and recieve is loaded
-                    RxState <= 2'b01;       //State becomed loading
+                if(SSPFSSIN) begin          //If idle and recieve request to intake data
+                    RxState <= 2'b10;       //State becomed reading (no load)
+                    RxShiftCount = 7;       //Set counter to start at bit 7 and count down to 0, (MSB is sent first)
                 end
                 else begin
                     RxState <= 2'b00;       //Do nothing
                 end
             end
-            else if(RxState == 2'b01) begin //Tx state is load
-                RxState <= 2'b10;           //Go to shifting mode
-            end
             else if(RxState == 2'b10) begin
-                if(RxShiftCount < 6) begin  //Normal behavior for first 7 bits.
-                    RxShiftCount = RxShiftCount + 1'b1;
+                if(RxShiftCount > 0) begin  //Normal behavior for first 7 bits.
+                    RxShiftCount = RxShiftCount - 1'b1;
                 end
-                else if(RxShiftCount == 6) begin
-                    if(!TxEMPTY) begin
-                        RxShiftCount = 8;   //Immediately go into sending another transmission
+                else if(RxShiftCount == 0) begin
+                    if(SSPFSSIN) begin
+                        RxShiftCount = 7;   //Immediately go into sending another transmission
                     end
                     else begin
-                        RxShiftCount = RxShiftCount + 1'b1;
+                        RxShiftCount = RxShiftCount - 1'b1;
+                        RxState <= 2'b00;
                     end
-                end
-                else if(RxShiftCount == 7) begin
-                    RxShiftCount <= 0;      //Reset counter
-                    RxState <= 0;           //Return to idle after sending
-                end
-                else if(RxShiftCount == 8) begin //Special case
-                    RxShiftCount <= 0;      //Don't leave sending state, go into another send immediately
                 end
                 else begin                  //Catch all
                     RxState <= 0;           //Break and return to idle (give up on transmission)
@@ -179,35 +169,31 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
             end
             //Otherwise do nothing
         end
-        //Tell Rx another word is coming (RxRead is tied to TxLOGICWRITE)
-        RxRead <= ((slowCLK == 1'b0) && (beginReceive == 1'b1)); 
+        //RxRead is not set how TxWrite is set because RxRead is based on external stimuli
+        //RxRead <= ((slowCLK == 1'b0) && (beginReceive == 1'b1)); 
     end
     //Recieve that should only run on PCLK:
     always @(posedge PCLK) begin
-        if(!slowCLK) begin
-            if(RxState == 2'b01) begin      //In either if or else if, load new value in. 
-                recieve <= TxDATA;
-            end
-            else if(RxState == 2'b10 && RxShiftCount == 8) begin
-                recieve <= TxDATA;
-            end
-            else begin                      //If we aren't loading we are sending via shifting
-                recieve <= {recieve[ 6: 0 ], 1'b0};   //Remember the SSPTXD assign we made.
-            end
+        SSPCLKIN_prev <= SSPCLKIN; //Remember last SSPCLK clock (clock is 1/2 speed so this works)
+        
+        if(SSPCLKIN_falling) begin
+            //RxState may not update in time, and we don't need to check it to load in value so we will not.
+            //This way the register is always writing and we just grab it when we detect that it is ready. 
+            recieve <= {recieve[6: 0], SSPRXD}; 
         end
+        //If SSPCLKIN is not on falling edge, do nothing. 
 
-        if(beginReceive && slowCLK) begin
-            //sspoe_b <= 1'b0;
-        end
-        else if(RxState == 2'b00 && slowCLK) begin
-            //sspoe_b <= 1'b1;                //Pulse high
+        if(RxShiftCounter == 0 && SSPCLKIN_rising) begin
+            RxRead <= 1'b1;
         end
         else begin
-            //sspoe_b <= sspoe_b;             //Do nothing
+            RxRead <= 1'b0;
         end
     end
 
-    //Run Regardless:
+
+    //Run Regardless: Does SSP need a conditinoal reset?
+    /*
     always @(posedge PCLK) begin
         slowCLK <= ~slowCLK;    //1/2 speed because this clock switches only on pos. edge of PCLK.
         if (!CLEAR_B) begin
@@ -219,4 +205,5 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TXDATA, TxEMPTY
             RxLOGICWRITE <= 0;
         end
     end
+    */
 endmodule
