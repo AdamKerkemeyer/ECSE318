@@ -22,11 +22,12 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE, //PCLK, CLEAR_B, 
     //Define internal variables here:
     reg [7:0] FIFO [3:0];       //4 bytes of recieving FIFO 
     reg [1:0] W_PTR, R_PTR;     //read (for sending processor data) and write pointer (coming from logic)
-    reg full;                   //Set to 1 if we have 4 elements, (could also use a counter, but we can figure that out with pointers)
-    //Can't rely on an integer count because we only care where read pointer is
-    wire almostFilled;
-
-    assign almostFilled = (R_PTR == W_PTR + 1'b1); 
+    reg full;               //Set to 1 if we have 4 elements, (could also use a counter, but we can figure that out with pointers)
+    integer count;
+    initial begin
+        full <= 0;
+        count <= 0;
+    end
 
     assign SSPRXINTR = full;    //Using "=" lets us tie SSPRXINTR to if the FIFO is full
 
@@ -68,9 +69,16 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE, //PCLK, CLEAR_B, 
                if(!full) begin
                     W_PTR <= W_PTR + 2'b01;
                     FIFO[W_PTR] <= RxDATA;
-                    full <= almostFilled;
+                    count <= count + 1;
                 end
             end
+            //Otherwise we do no FIFO operations. 
+            if (count >= 3) begin
+                full <= 1'b1;
+            end
+        // Display the FIFO contents and relevant signals
+        $display("RxDATA: %h | PRDATA: %h | SSPRXINTR: %b | LOGICWRITE: %b | PWRITE: %b | FIFO: %h %h %h %h", 
+        RxDATA, PRDATA, SSPRXINTR, LOGICWRITE, PWRITE, FIFO[0], FIFO[1], FIFO[2], FIFO[3]);
         end
     end
 endmodule

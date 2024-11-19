@@ -76,5 +76,8 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
                 end
             end
         end
+        // Display the FIFO contents and relevant signals
+        $display("PWDATA: %h | TxDATA: %h | SSPTXINTR: %b | LOGICWRITE: %b | PWRITE: %b | FIFO: %h %h %h %h", 
+        PWDATA, TxDATA, SSPTXINTR, LOGICWRITE, PWRITE, FIFO[0], FIFO[1], FIFO[2], FIFO[3]);
     end
 endmodule

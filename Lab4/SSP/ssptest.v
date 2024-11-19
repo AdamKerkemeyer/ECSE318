@@ -5,6 +5,23 @@ module ssp_test1;
 	wire sspoe_b, ssptxd, sspfssout, sspclkout, ssptxintr, ssprxintr;
 	wire [7:0] data_out;
 
+	ssp ssp1 (
+		.PCLK(clock), 
+		.CLEAR_B(clear_b), 
+		.PSEL(psel), 
+		.PWRITE(pwrite), 
+		.SSPCLKIN(sspclkin), 
+		.SSPFSSIN(sspfssin), 
+		.SSPRXD(ssprxd), 
+		.PWDATA(data_in), 
+		.PRDATA(data_out), 
+		.SSPCLKOUT(sspclkout), 
+		.SSPFSSOUT(sspfssout), 
+		.SSPTXD(ssptxd), 
+		.SSPOE_B(sspoe_b), 
+		.SSPTXINTR(ssptxintr), 
+		.SSPRXINTR(ssprxintr));
+
 	initial 
 	begin
 			clock = 1'b0;
@@ -38,10 +55,7 @@ module ssp_test1;
 	always 
 		#20 clock = ~clock;
 
-// serial output from SSP is looped back to the serial input.
-
-	ssp ssp1 (.PCLK(clock), .CLEAR_B(clear_b), .PSEL(psel), .PWRITE(pwrite), .SSPCLKIN(sspclkin), .SSPFSSIN(sspfssin), .SSPRXD(ssprxd), .PWDATA(data_in), .PRDATA(data_out), .SSPCLKOUT(sspclkout), .SSPFSSOUT(sspfssout), .SSPTXD(ssptxd), .SSPOE_B(sspoe_b), .SSPTXINTR(ssptxintr), .SSPRXINTR(ssprxintr));
-
+	// serial output from SSP is looped back to the serial input.
 endmodule
 
 module ssp_test2;

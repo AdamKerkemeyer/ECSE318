@@ -179,7 +179,7 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
         pastSSPCLKIN <= SSPCLKIN; //Remember last SSPCLK clock (clock is 1/2 speed so this works)
         
         if(!CLEAR_B) begin
-            RxMode <= 4'd0;
+            RxMode <= 4'd0;         //Reset mode
         end
         else begin
             RxMode <= nextRxMode;
@@ -196,7 +196,7 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
         //If SSPCLKIN is not on falling edge, do nothing. 
 
         if((RxMode == 4'd8) && SSPCLKIN_rising) begin
-            RxRead <= 1'b1;
+            RxRead <= 1'b1; //RxLOGICWRITE to 1 if going idle
         end
         else begin
             RxRead <= 1'b0;
