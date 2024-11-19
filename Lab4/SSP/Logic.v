@@ -6,6 +6,7 @@ Recieve logic is synchronyzed by SSPCLKIN which is recieved by broadcasting from
 Recieve logic performs serial to parallel conversion on incoming synchronous SSPRXD data stream
 */
 
+//CURRENTLY THIS LOGIC IS NOT WORKING AS EXPECTED.
 module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKOUT,
         SSPOE_B, SSPFSSOUT, SSPTXD, TxLOGICWRITE, RxLOGICWRITE, RxDATA);
     //Inputs:
@@ -28,24 +29,29 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
     output [7:0] RxDATA;        //To Rx, byte recieved.
 
     //SSPCLKOUT:
-    reg slowCLK <= 1'b0;
+    reg slowCLK = 1'b0;
     assign SSPCLKOUT = slowCLK; 
-
+    always @(posedge PCLK) begin
+        slowCLK <= ~slowCLK;
+    end
     //For the sake of readability I am going to put transmit and recieve in two seperate always blocks with seperate declarations
     //Transmission:
-    reg [7:0] transmit <= 8'b00000000;
+    reg [7:0] transmit = 8'b00000000;
     reg TxWrite;
-    reg sspoeB;
+    reg sspoeB = 1'b1;
     wire beginTransmit;
-    reg [3:0] TxShiftCount <= 4'b0000;       //Remember how many shifts have occured
-    reg TxState <= 2'b00;                    //0 for idle, 1 for load, 2 for shifting
-    initial begin
-        sspoeB <= 1'b1;                     //Low active output enable
-    end
+    reg [3:0] TxShiftCount = 4'b0000;       //Remember how many shifts have occured
+    //reg [1:0] TxState = 2'b00;             //0 for idle, 1 for load, 2 for shifting
+    reg [3:0] TxMode = 4'b0000;             //This is like TxShiftCount and TxState mashed together
+    reg [3:0] nextTxMode = 4'b0000;         //Next TxMode
+    //TxMode: 0=idle, 1=load, 2=shift7, 3=shift6, 4=shift5, 5=shift4, 6=shift3, 7=shift2, 8=shift1, 9=shift0, 10=shift0&load
+
     assign SSPOE_B = sspoeB;
     assign TxLOGICWRITE = TxWrite;
     assign SSPFSSOUT = beginTransmit;
     assign SSPTXD = transmit[7];    //Whatever is in last spot of transmit register will be on wire
+    assign beginTransmit = (TxMode == 4'd0) || (TxMode == 4'd10);
+
     /*
     For the transmission to work, we need a number of things to be true:
     1. Tx FIFO is not empty (~TxEMPTY)
@@ -53,54 +59,54 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
     3. TxLOGICWRITE is set to high (TxWrite <= 1)
     4. CLEAR_B is high (active low)
     */
-    always @(*) begin                       //MSB is sent first
+    always @(*) begin//Swapped with *                      //MSB is sent first
         if(!slowCLK) begin                  //SSPCLKOUT is low
-            if(TxState == 2'b00) begin      //idle
+            if(TxMode == 4'd0) begin        //idle
                 if(!TxEMPTY) begin          //Can transmit if currently idle and transmit is loaded
-                    TxState <= 2'b01;       //State becomed loading
+                    nextTxMode <= 4'd1;     //State becomed loading
                 end
                 else begin
-                    TxState <= 2'b00;       //Do nothing
+                    nextTxMode <= 4'd0;       //Do nothing
                 end
             end
-            else if(TxState == 2'b01) begin //Tx state is load
-                TxState <= 2'b10;           //Go to shifting mode
+            else if(TxMode == 4'd1) begin //Tx state is load
+                nextTxMode <= 4'd2;           //Go to shifting mode
             end
-            else if(TxState == 2'b10) begin
-                if(TxShiftCount < 6) begin  //Normal behavior for first 7 bits.
-                    TxShiftCount <= TxShiftCount + 1'b1;
+            else if(TxMode >= 2 && TxMode <= 7) begin
+                nextTxMode <= TxMode + 4'd1;
+            end
+            else if(TxMode == 8) begin
+                if(!TxEMPTY) begin
+                    nextTxMode <= 4'd10; //There is nothing after last shift so return to 0.
                 end
-                else if(TxShiftCount == 6) begin
-                    if(!TxEMPTY) begin
-                        TxShiftCount <= 8;   //Immediately go into sending another transmission
-                    end
-                    else begin
-                        TxShiftCount <= TxShiftCount + 1'b1;
-                    end
+                else begin
+                    nextTxMode <= 4'd9; //Return to idle
                 end
-                else if(TxShiftCount == 7) begin
-                    TxShiftCount <= 0;      //Reset counter
-                    TxState <= 2'b00;           //Return to idle after sending
-                end
-                else if(TxShiftCount == 8) begin //Special case
-                    TxShiftCount <= 0;      //Don't leave sending state, go into another send immediately
-                end
-                else begin                  //Catch all
-                    TxState <= 2'b00;           //Break and return to idle (give up on transmission)
-                end
+            end
+            else if(TxMode == 9) begin
+                nextTxMode <= 4'd0;
+            end
+            else if(TxMode == 10) begin
+                nextTxMode <= 4'd2;
+            end
+            else begin
+                nextTxMode <= 4'd0;
             end
             //Otherwise do nothing
         end
         //Tell Tx another word is coming (TxWrite is tied to TxLOGICWRITE)
-        TxWrite <= ((slowCLK == 1'b0) && (beginTransmit == 1'b1)); 
+        TxWrite <= ((!slowCLK) && (beginTransmit)); 
     end
     //Transmit that should only run on PCLK:
     always @(posedge PCLK) begin
+        if(!Clear_B) begin
+            TxMode <= 4'b0000;
+        end
+        else begin
+            TxMode <= nextTxMode;       //Tx Mode only updates once on the PCLK
+        end
         if(!slowCLK) begin
-            if(TxState == 2'b01) begin      //In either if or else if, load new value in. 
-                transmit <= TxDATA;
-            end
-            else if(TxState == 2'b10 && TxShiftCount == 8) begin
+            if(TxMode == 4'd1 || TxMode == 4'd10) begin      //In either if or else if, load new value in. 
                 transmit <= TxDATA;
             end
             else begin                      //If we aren't loading we are sending via shifting
@@ -111,22 +117,21 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
         if(beginTransmit && slowCLK) begin
             sspoeB <= 1'b0;
         end
-        else if((TxState == 2'b00) && slowCLK) begin
+        else if((TxMode == 4'd0) && slowCLK) begin
             sspoeB <= 1'b1;                //Pulse high
         end
         else begin
             sspoeB <= sspoeB;             //Do nothing
         end
     end
-    assign beginTransmit = (TxState == 2'b01) || (TxShiftCount == 8);
 
     //Recieve
-    reg [7:0] recieve <= 8'b00000000;
+    reg [7:0] recieve = 8'b00000000;
     reg RxRead;                             //assign to RxLOGICWRITE
     wire beginReceive;
     reg pastSSPCLKIN;
-    reg [3:0] RxShiftCount <= 4'b0000;       //Remember how many shifts have occured
-    reg RxState <= 2'b00;                    //0 for idle, 1 for load, 2 for shifting
+    reg [3:0] RxShiftCount = 4'b0000;       //Remember how many shifts have occured
+    reg [1:0] RxState = 2'b00;                    //0 for idle, 1 for load, 2 for shifting
     
     assign beginReceive = ((RxState == 2'b01) || (RxShiftCount == 8));
 
@@ -136,7 +141,7 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
     wire SSPCLKIN_rising  = SSPCLKIN && ~pastSSPCLKIN;
     wire SSPCLKIN_falling = ~SSPCLKIN && pastSSPCLKIN;
 
-    always @(*) begin                       //MSB is sent first
+    always @(posedge PCLK or negedge PCLK) begin                       //MSB is sent first
         if(SSPCLKIN_falling) begin          
             if(RxState == 2'b00) begin      //idle
                 if(SSPFSSIN) begin          //If idle and recieve request to intake data
