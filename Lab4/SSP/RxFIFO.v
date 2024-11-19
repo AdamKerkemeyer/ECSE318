@@ -36,16 +36,16 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE, //PCLK, CLEAR_B, 
     integer i;
 
     always @(posedge PCLK) begin
-        if (PSEL) begin //Cannot do anything if enable is not high first, assuming that includes sending reset
-            if (!CLEAR_B) begin 
-                for (i = 0; i < 4; i = i+1) begin
-                    FIFO[i] <= 8'b00000000;
-                end
-                W_PTR <= 2'b00;
-                R_PTR <= 2'b00;
-                full <= 1'b0;
-                count <= 0;
+        if (!CLEAR_B) begin 
+            for (i = 0; i < 4; i = i+1) begin
+                FIFO[i] <= 8'b00000000;
             end
+            W_PTR <= 2'b00;
+            R_PTR <= 2'b00;
+            full <= 1'b0;
+            count <= 0;
+        end
+        if (PSEL) begin //Cannot do anything if enable is not high first, assuming that includes sending reset
             /*There are 3 cases we must handle:
             1. The processor requests to read and the Tx/Rx logic has something to write
             2. The processor requests to read and the Tx/Rx logic has nothing to write 
@@ -53,7 +53,7 @@ module RxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, RxDATA, LOGICWRITE, //PCLK, CLEAR_B, 
             4. The processor does not request to read and the Tx/Rx logic has nothing to write (do nothing)
             In no loop do we directly update PRDATA because we already assigned it to always be linked to the Read pointer
             */
-            else if (!PWRITE && LOGICWRITE) begin
+            if (!PWRITE && LOGICWRITE) begin
                 R_PTR <= R_PTR + 2'b01;
                 W_PTR <= W_PTR + 2'b01;
                 FIFO[W_PTR] <= RxDATA;

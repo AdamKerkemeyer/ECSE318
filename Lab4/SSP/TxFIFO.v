@@ -37,10 +37,7 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
     integer i;
 
     always @(posedge PCLK) begin
-        if (PSEL) begin //Cannot do anything if enable is not high first, assuming that includes sending reset
-        //There is an issue with where I have embedded PSEL like this because it prohibits internal SSP communication
-        //I will add it only to cases where we check PWRITE if there is an issue with the TB
-            if (!CLEAR_B) begin 
+        if (!CLEAR_B) begin 
                 for (i = 0; i < 4; i = i+1) begin
                     FIFO[i] <= 8'b00000000;
                 end
@@ -49,7 +46,8 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
                 full <= 1'b0;
                 empty <= 1'b0;
                 count <= 0;
-            end
+        end
+        if (PSEL) begin //Cannot do anything if enable is not high first, assuming that includes sending reset
             /*There are 3 cases we must handle:
             1. The processor requests to write and the Tx/Rx logic wants to send
             2. The processor requests to write and the Tx/Rx logic does not want to send
@@ -57,7 +55,7 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
             4. The processor does not request to write and the Tx/Rx logic does not want to send (do nothing)
             In no loop do we directly update TxDATA because we already assigned it to always be linked to the Read pointer
             */
-            else if (PWRITE && LOGICWRITE) begin
+            if (PWRITE && LOGICWRITE) begin
                 R_PTR <= R_PTR + 2'b01;
                 W_PTR <= W_PTR + 2'b01;
                 FIFO[W_PTR] <= PWDATA;
