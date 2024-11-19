@@ -7,6 +7,9 @@ Recieve logic performs serial to parallel conversion on incoming synchronous SSP
 */
 
 //CURRENTLY THIS LOGIC IS NOT WORKING AS EXPECTED.
+//I think SSPOE_B goes low at the correct time but then does not go back up correctly
+//I think the TxInterrupt flag is working correctly
+//I cannot figure out why no data at all is being written to DataOut when Rx seems to be working. 
 module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKOUT,
         SSPOE_B, SSPFSSOUT, SSPTXD, TxLOGICWRITE, RxLOGICWRITE, RxDATA);
     //Inputs:
@@ -186,6 +189,9 @@ module logic(PCLK, SSPCLKIN, CLEAR_B, SSPFSSIN, SSPRXD, TxDATA, TxEMPTY, SSPCLKO
             //RxState may not update in time, and we don't need to check it to load in value so we will not.
             //This way the register is always writing and we just grab it when we detect that it is ready. 
             recieve <= {recieve[6:0], SSPRXD}; 
+        end
+        else begin
+            recieve <= recieve;
         end
         //If SSPCLKIN is not on falling edge, do nothing. 
 
