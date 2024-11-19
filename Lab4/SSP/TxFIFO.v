@@ -24,12 +24,13 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
     reg [7:0] FIFO [3:0];                   //4 bytes of recieving FIFO 
     reg [1:0] W_PTR, R_PTR;                 //read (for sending processor data) and write pointer (coming from logic)
     reg full, empty;                        //Unlike Rx must keep track of both full & empty
-    integer count;
-    initial begin
-        full <= 1'b0;
-        empty <= 1'b1;
-        count <= 0;
-    end
+    //Can't rely on an integer count because we only care where read and write pointer are and they wrap around
+    //Need to know when the pointers are going to overlap:
+    wire almostFilled;
+    wire almostEmptied;
+
+    assign almostFilled = (R_PTR == W_PTR + 1'b1); 
+    assign almostEmptied = (R_PTR + 1'b1 == W_PTR);
 
     assign SSPTXINTR = full;                //Using "=" lets us tie SSPRXINTR to if the FIFO is full
     assign EMPTY = empty;                   //
@@ -44,8 +45,7 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
                 W_PTR <= 2'b00;
                 R_PTR <= 2'b00;
                 full <= 1'b0;
-                empty <= 1'b0;
-                count <= 0;
+                empty <= 1'b1;
         end
         if (PSEL) begin //Cannot do anything if enable is not high first, assuming that includes sending reset
             /*There are 3 cases we must handle:
@@ -63,8 +63,8 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
             end
             else if (LOGICWRITE) begin //Swap LOGICWRITE and PWRITE from Rx Logic
                 R_PTR <= R_PTR + 2'b01;
-                full <= 1'b0;
-                count <= count + 1;
+                full <= 1'b0;   //We know its not full
+                empty <= almostEmptied;
             end
             else if (PWRITE) begin
                //Since there is no request to also read, we must see if the register is full first
@@ -72,17 +72,8 @@ module TxFIFO(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA, LOGICWRITE, //all inputs from
                     W_PTR <= W_PTR + 2'b01;
                     FIFO[W_PTR] <= PWDATA;
                     empty <= 1'b0;
-                    count <= count - 1;
+                    full <= almostFilled;   //Check and assign
                 end
-            end
-            //Otherwise we do no FIFO operations. 
-            if (count >= 3) begin
-                full <= 1'b1;
-                empty <= ~full;
-            end
-            else if (count < 0) begin
-                empty <= 1'b1;
-                full <= ~empty;
             end
         end
     end
