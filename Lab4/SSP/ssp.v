@@ -15,7 +15,7 @@ Rx will be like opposite of Tx, these will both only manage the FIFO.
 Create seperate logic for sending and recieving the signals by bit
 The SSP Tb will only directly interface with the SSP but some wires will pass through
 */
-module SSP(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
+module ssp(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
         PRDATA[7:0], SSPOE_B, SSPTXD, SSPCLKOUT, SSPFSSOUT, SSPTXINTR, SSPRXINTR);
                         //Input is first row, output is second
     input PCLK;         //Clock for SSP (all operations on FIFO and interface are done on this clock)
@@ -47,7 +47,7 @@ module SSP(PCLK, CLEAR_B, PSEL, PWRITE, PWDATA[7:0], SSPCLKIN, SSPFSSIN, SSPRXD,
     //Connect Rx inputs to Tx outputs, this will happen in TB however, don't directly implement them
     
     wire TxLOGICWRITE, RxLOGICWRITE, TxEMPTY;
-    wire [7:0] rxDATA, txDATA;
+    wire [7:0] RxDATA, TxDATA;
 
     Rx_FIFO rx(
         .PCLK(PCLK),
