@@ -4,38 +4,19 @@
 #include <iostream>
 #include <regex>
 
-class Parser {
-public:
-    Parser(const std::string& filename);
-    void parse();
-    const std::vector<Gate*>& getGates() const;
-
-private:
-    std::string filename;
-    std::vector<Gate*> gates;
-    std::unordered_map<std::string, GateType> gateTypeMap;
-    std::unordered_map<std::string, Gate*> gateMap;
-
-    void initializeGateTypeMap();
-    GateType stringToGateType(const std::string& typeStr);
-    void parseLine(const std::string& line);
-    void connectGates(const std::string& output, const std::vector<std::string>& inputs);
-};
-
 Parser::Parser(const std::string& filename) : filename(filename) {
     initializeGateTypeMap();
 }
 
 void Parser::initializeGateTypeMap() {
-    gateTypeMap["and"] = GateType::and;
-    gateTypeMap["or"] = GateType::or;
-    gateTypeMap["not"] = GateType::not;
-    gateTypeMap["nor"] = GateType::nor;
-    gateTypeMap["nand"] = GateType::nand;
-    gateTypeMap["input"] = GateType::input;
-    gateTypeMap["output"] = GateType::output;
-    gateTypeMap["buffer"] = GateType::buffer;
-
+    gateTypeMap["and"] = GateType::AND;
+    gateTypeMap["or"] = GateType::OR;
+    gateTypeMap["not"] = GateType::NOT;
+    gateTypeMap["nor"] = GateType::NOR;
+    gateTypeMap["nand"] = GateType::NAND;
+    gateTypeMap["input"] = GateType::INPUT;
+    gateTypeMap["output"] = GateType::OUTPUT;
+    gateTypeMap["buffer"] = GateType::BUFFER;
 }
 
 GateType Parser::stringToGateType(const std::string& typeStr) {

@@ -8,15 +8,15 @@
 #include <vector>
 
 enum class GateType {
-    and,
-    or,
-    not,
-    nor,
-    nand,
-    dff,
-    input,
-    output,
-    buffer
+    AND,         //I tried to use lowercase but that will throw an erorr because these are keywords in c++
+    OR,
+    NOT,
+    NOR,
+    NAND,
+    DFF,
+    INPUT,
+    OUTPUT,
+    BUFFER
 }
 
 class Gate {
