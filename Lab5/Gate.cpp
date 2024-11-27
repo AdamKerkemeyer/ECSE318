@@ -1,7 +1,7 @@
 #include "Gate.h"
 
 // Constructor
-Gate::Gate(const std::string& name, const std::string& type)
+Gate::Gate(const std::string& name, GateType type)
     : name(name), type(type), nextGate(nullptr) {}
 
 // Getters
@@ -9,7 +9,7 @@ std::string Gate::getName() const {
     return name;
 }
 
-std::string Gate::getType() const {
+GateType Gate::getType() const {
     return type;
 }
 
@@ -30,7 +30,7 @@ void Gate::setName(const std::string& name) {
     this->name = name;
 }
 
-void Gate::setType(const std::string& type) {
+void Gate::setType(GateType type) {
     this->type = type;
 }
 

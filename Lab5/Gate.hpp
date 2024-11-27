@@ -7,6 +7,18 @@
 #include <string>
 #include <vector>
 
+enum class GateType {
+    and,
+    or,
+    not,
+    nor,
+    nand,
+    dff,
+    input,
+    output,
+    buffer
+}
+
 class Gate {
 private:
     std::string name;
