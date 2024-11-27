@@ -1,8 +1,7 @@
-#include "Gate.h"
+#include "Gate.hpp"
 
 // Constructor
-Gate::Gate(const std::string& name, GateType type)
-    : name(name), type(type), nextGate(nullptr) {}
+Gate::Gate(const std::string& name, GateType type);
 
 // Getters
 std::string Gate::getName() const {
