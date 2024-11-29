@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include "Gate.cpp"
 
 enum class GateType {
     AND,         //I tried to use lowercase but that will throw an erorr because these are keywords in c++
@@ -17,7 +18,7 @@ enum class GateType {
     INPUT,
     OUTPUT,
     BUFFER
-}
+};              //Without this the compiler sees one declaration with two types. 
 
 class Gate {
 private:
@@ -28,23 +29,23 @@ private:
     Gate* nextGate;                     //Gate* is a pointer to the Gate class
 
 public:
-    // Constructor
     // Saab: XOR characters for 2^8 buckets for hash map (we pick 8 because each string character is 8 bits)
-    Gate(const std::string& name, const std::string& type);
+    Gate(const std::string& name, GateType type);
 
-    // Getters
-    std::string getName() const;        //Having const here tells everyone calling this function
-    std::string getType() const;        // will not change the variable it is accessing
+    std::string getName() const;        //Having const indicates calling this function will not change what it is accessing
+    GateType getType() const;        
     std::vector<Gate*> getFaninGates() const;
     std::vector<Gate*> getFanoutGates() const;
     Gate* getNextGate() const;
 
-    // Setters
     void setName(const std::string& name);  //const here before a parameter means that it won't be changed by the constructor
-    void setType(const std::string& type);
+    void setType(GateType type);
     void setFaninGates(const std::vector<Gate*>& faninGates);
     void setFanoutGates(const std::vector<Gate*>& fanoutGates);
     void setNextGate(Gate* nextGate);
+
+    void addFaninGate(Gate* faninGate);
+    void addFanoutGate(Gate* fanoutGate);
 };
 
 #endif

@@ -18,7 +18,7 @@ void Parser::initializeGateTypeMap() {
     gateTypeMap["output"] = GateType::OUTPUT;
     gateTypeMap["buffer"] = GateType::BUFFER;
 }
-
+//Used by the parser to swap the string with the type
 GateType Parser::stringToGateType(const std::string& typeStr) {
     return gateTypeMap[typeStr];
 }
