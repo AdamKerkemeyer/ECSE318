@@ -20,6 +20,7 @@ enum class GateType {
     BUFFER
 };              //Without this the compiler sees one declaration with two types. 
 
+
 class Gate {
 private:
     std::string name;
