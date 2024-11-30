@@ -6,7 +6,6 @@
 
 #include <string>
 #include <vector>
-#include "Gate.cpp"
 
 enum class GateType {
     AND,         //I tried to use lowercase but that will throw an erorr because these are keywords in c++
@@ -19,7 +18,6 @@ enum class GateType {
     OUTPUT,
     BUFFER
 };              //Without this the compiler sees one declaration with two types. 
-
 
 class Gate {
 private:

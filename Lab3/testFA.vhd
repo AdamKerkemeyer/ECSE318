@@ -26,13 +26,13 @@ begin
     stim : process is
     begin
         A <= '0'; B <= '0'; CIN <= '0';
-        wait for 10ns;
+        wait for 10 ns;
         A <= '0'; B <= '0'; CIN <= '1';
-        wait for 10ns;
+        wait for 10 ns;
         A <= '0'; B <= '1'; CIN <= '1';
-        wait for 10ns;
+        wait for 10 ns;
         A <= '1'; B <= '1'; CIN <= '1';
-        wait for 10ns;
+        wait for 10 ns;
         report "all tests finished";
     end process stim;
 end architecture test;

@@ -19,17 +19,17 @@ begin
     stim : process is
     begin
         M <= '0'; D <= '0'; C <= '0'; iQ <= '0';
-        wait for 10ns;
+        wait for 10 ns;
         M <= '1'; D <= '0'; C <= '0'; iQ <= '0';
-        wait for 10ns;
+        wait for 10 ns;
         M <= '0'; D <= '0'; C <= '1'; iQ <= '0';
-        wait for 10ns;
+        wait for 10 ns;
         M <= '1'; D <= '0'; C <= '1'; iQ <= '0';
-        wait for 10ns;
+        wait for 10 ns;
         M <= '0'; D <= '1'; C <= '0'; iQ <= '0';
-        wait for 10ns;
+        wait for 10 ns;
         M <= '0'; D <= '1'; C <= '0'; iQ <= '1';
-        wait for 10ns;
+        wait for 10 ns;
         report "all tests finished";
     end process stim;
 end architecture test;
