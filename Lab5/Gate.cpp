@@ -4,6 +4,7 @@ Gate::Gate(const std::string& name, GateType type)
     //Member initializer list
     : name(name), type(type), faninGates(), fanoutGates(), nextGate(nullptr) {}
 
+
 std::string Gate::getName() const {
     return name;
 }
