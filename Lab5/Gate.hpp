@@ -33,8 +33,8 @@ public:
 
     std::string getName() const;            //Having const indicates calling this function will not change what it is accessing
     GateType getType() const;
-    std::vector<Gate*> getFaninGates() const;
-    std::vector<Gate*> getFanoutGates() const;
+    const std::vector<Gate*>& getFaninGates() const;        //First const indicates the method returns a constant reference
+    const std::vector<Gate*>& getFanoutGates() const;       //Second indicates that the get function does not modify any member variables
     Gate* getNextGate() const;
 
     void setName(const std::string& name);  //const here before a parameter means that it won't be changed by the constructor

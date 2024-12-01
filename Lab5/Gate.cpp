@@ -11,11 +11,11 @@ GateType Gate::getType() const {
     return type;
 }
 
-std::vector<Gate*> Gate::getFaninGates() const {
+const std::vector<Gate*>& Gate::getFaninGates() const {
     return faninGates;
 }
 
-std::vector<Gate*> Gate::getFanoutGates() const {
+const std::vector<Gate*>& Gate::getFanoutGates() const {
     return fanoutGates;
 }
 

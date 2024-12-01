@@ -18,6 +18,21 @@ void Parser::initializeGateTypeMap() {
     gateTypeMap["output"] = GateType::OUTPUT;
     gateTypeMap["buffer"] = GateType::BUFFER;
 }
+
+std::string gateTypeToString(GateType type) {
+    switch (type) {
+        case GateType::AND: return "and";
+        case GateType::OR: return "or";
+        case GateType::NOT: return "not";
+        case GateType::NOR: return "nor";
+        case GateType::NAND: return "nand";
+        case GateType::INPUT: return "input";
+        case GateType::OUTPUT: return "output";
+        case GateType::BUFFER: return "buffer";
+        default: return "ERROR: GATE TYPE UNKNOWN";
+    }
+}
+
 //Used by the parser to swap the string with the type
 GateType Parser::stringToGateType(const std::string& typeStr) {
     return gateTypeMap[typeStr];

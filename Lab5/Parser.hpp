@@ -24,4 +24,6 @@ private:
     void connectGates(const std::string& output, const std::vector<std::string>& inputs);
 };
 
+std::string gateTypeToString(GateType type);
+
 #endif
