@@ -16,14 +16,12 @@ int main() {
     for (const Gate* gate : gates) {
         std::cout << "Gate: " << gate->getName() << ", Type: " << gateTypeToString(gate->getType()) << std::endl;
 
-        // Print fanin gates
         std::cout << "  Fanin gates: ";
         for (const Gate* faninGate : gate->getFaninGates()) {
             std::cout << faninGate->getName() << " ";
         }
         std::cout << std::endl;
 
-        // Print fanout gates
         std::cout << "  Fanout gates: ";
         for (const Gate* fanoutGate : gate->getFanoutGates()) {
             std::cout << fanoutGate->getName() << " ";
@@ -33,3 +31,13 @@ int main() {
 
     return 0;
 }
+/*
+# Compile the program
+g++ -o main main.cpp Parser.cpp Gate.cpp
+
+# Run the program
+./main
+
+# Follow the prompt
+Enter the name of the .v file to parse: example.v
+*/

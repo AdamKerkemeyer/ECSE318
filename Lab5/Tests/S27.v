@@ -16,8 +16,8 @@ wire 	G5,G6,G7,G14,G8,G12,G15,G16
 	not 	XG4 	(G14,G0);
 	and 	XG5 	(G8,G6,G14);
 	nor 	XG6 	(G12,G7,G1);
-	or 	XG7 	(G15,G8,G12);
-	or 	XG8 	(G16,G8,G3);
+	or 		XG7 	(G15,G8,G12);
+	or 		XG8 	(G16,G8,G3);
 	nor 	XG9 	(G13,G12,G2);
 	nand 	XG10 	(G9,G15,G16);
 	nor 	XG11 	(G11,G9,G5);
