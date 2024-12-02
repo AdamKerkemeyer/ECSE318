@@ -90,7 +90,7 @@ void Parser::parseLine(const std::string& line) {
         return;
     }
 
-    if (line.find("output") == 0) {
+    else if (line.find("output") == 0) {
         std::string name = line.substr(7);                  //delete "output "
         name = std::regex_replace(name, std::regex("^\\s+|\\s+$"), "");
         Gate* outputGate = new Gate(name, GateType::OUTPUT);
@@ -98,60 +98,62 @@ void Parser::parseLine(const std::string& line) {
         gateMap[name] = outputGate;
         return;
     }
-    //Normal Gate Parse:
-    std::regex gateRegex(R"((\w+)\s+(\w+)\s+\(([^)]+)\);)");
-    std::smatch match;
-    if (std::regex_search(line, match, gateRegex)) {
-        std::string typeStr = match[1];
-        std::string name = match[2];
-        std::string connections = match[3];
 
-        GateType type = stringToGateType(typeStr);
-        Gate* gate = new Gate(name, type);
-        gates.push_back(gate);
-        gateMap[name] = gate;
+    else {
+        //Normal Gate Parse:
+        std::regex gateRegex(R"((\w+)\s+(\w+)\s+\(([^)]+)\);)");
+        std::smatch match;
+        if (std::regex_search(line, match, gateRegex)) {
+            std::string typeStr = match[1];
+            std::string name = match[2];
+            std::string connections = match[3];
 
-        if (previousGate) {
-            previousGate->setNextGate(gate);
+            GateType type = stringToGateType(typeStr);
+            Gate* gate = new Gate(name, type);
+            gates.push_back(gate);
+            gateMap[name] = gate;
+
+            if (previousGate) {
+                previousGate->setNextGate(gate);
+            }
+            previousGate = gate;
+
+            std::istringstream connStream(connections);
+            std::string output;
+            std::vector<std::string> inputs;            //Vector of inputs because we can have more than 1
+            std::getline(connStream, output, ',');      //Grab output gate using delimiter
+            std::string input;
+            while (std::getline(connStream, input, ',')) {
+                input = std::regex_replace(input, std::regex("^\\s+|\\s+$"), "");
+                inputs.push_back(input);
+            }
+            connectGates(output, inputs, gate);
         }
-        previousGate = gate;
-
-        std::istringstream connStream(connections);
-        std::string output;
-        std::vector<std::string> inputs;
-        connStream >> output;
-        std::string input;
-        while (connStream >> input) {
-            inputs.push_back(input);
-        }
-
-        connectGates(output, inputs);
     }
 }
 
-//This entire connectGates is wrong and does not add fanin or fanout gates
-//Commented out code is also wrong. Will need to redo this function from the ground up
-//To run on its own after the entire file has been processed and "find" gates to wire up to
-//Using the unordered map and gate names, parsing the file a second time.
-void Parser::connectGates(const std::string& output, const std::vector<std::string>& inputs) {
-    Gate* outputGate = gateMap[output];
-    /*if(!outputGate) {
-        outputGate = new Gate(output, GateType::BUFFER);
-        gates.push_back(outputGate);
-        gateMap[output] = outputGate;
-    }*/
+void Parser::connectGates(const std::string& output, const std::vector<std::string>& inputs, Gate* gate) {
+    //Skip if the gate type is an input or output
+    if (gate->getType() == GateType::INPUT || gate->getType() == GateType::OUTPUT) {
+        return;
+    }
+    
+    Gate* outputGate = gateMap[output];         //Find the output wire/buffer in the unordered map
+    if(!outputGate) {                           //Throw error if we can't find the gate
+        std::cerr << "Error: Output gate " << output << " not found in gateMap/not declared in file." << std::endl;
+        return;
+    }
+    gate -> addFanoutGate(outputGate);          //Add the pointer we found to that gate's fanout
+    outputGate -> addFaninGate(gate);           //Then go to the outputGate and add this gate as the fanin
 
     for (const std::string& input : inputs) {
         Gate* inputGate = gateMap[input];
-        /*if(!inputGate){
-            inputGate = new Gate(input, GateType::BUFFER);
-            gates.push_back(inputGate);
-            gateMap[input] = inputGate;
-        }*/
-       if(inputGate){
-        outputGate->addFaninGate(inputGate);
-        inputGate->addFanoutGate(outputGate);
-       }
+        if(!inputGate) {
+            std::cerr << "Error: Input gate " << input << " not found in gateMap/not declared in file." << std::endl;
+            return;
+        }
+        gate -> addFaninGate(inputGate);
+        inputGate -> addFanoutGate(gate);
     }
 }
 

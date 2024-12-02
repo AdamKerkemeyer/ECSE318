@@ -18,11 +18,12 @@ private:
     std::unordered_map<std::string, GateType> gateTypeMap;
     std::unordered_map<std::string, Gate*> gateMap;
     Gate* previousGate;                             //Remember previousGate to set a pointer
+    std::vector<std::string> gateLines;             //Store gate lines (GX, GX, GX) to process in a second wave
 
     void initializeGateTypeMap();
     GateType stringToGateType(const std::string& typeStr);
     void parseLine(const std::string& line);
-    void connectGates(const std::string& output, const std::vector<std::string>& inputs);
+    void connectGates(const std::string& output, const std::vector<std::string>& inputs, Gate* gate);
 };
 
 std::string gateTypeToString(GateType type);
