@@ -17,6 +17,7 @@ private:
     std::vector<Gate*> gates;
     std::unordered_map<std::string, GateType> gateTypeMap;
     std::unordered_map<std::string, Gate*> gateMap;
+    Gate* previousGate;                             //Remember previousGate to set a pointer
 
     void initializeGateTypeMap();
     GateType stringToGateType(const std::string& typeStr);

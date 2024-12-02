@@ -6,6 +6,12 @@ int main() {
     std::cout << "Enter the name of the .v file to parse: ";
     std::cin >> filename;
 
+    // Check if the filename already includes the "Tests/" folder
+    std::string folder = "Tests/";
+    if (filename.find(folder) != 0) {       //Search for a substring here
+        filename = folder + filename;       //If it is not there, append it
+    }
+
     Parser parser(filename);
     parser.parse();
 
