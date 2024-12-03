@@ -26,6 +26,7 @@ private:
     std::vector<Gate*> faninGates;      //Vector is a dynamic array
     std::vector<Gate*> fanoutGates;
     Gate* nextGate;                     //Gate* is a pointer to the Gate class
+    int level;                          //level is a value used to keep track of simluation order.
 
 public:
     // Saab: XOR characters for 2^8 buckets for hash map (we pick 8 because each string character is 8 bits)
@@ -36,12 +37,14 @@ public:
     const std::vector<Gate*>& getFaninGates() const;        //First const indicates the method returns a constant reference
     const std::vector<Gate*>& getFanoutGates() const;       //Second indicates that the get function does not modify any member variables
     Gate* getNextGate() const;
+    const int getLevel();
 
     void setName(const std::string& name);  //const here before a parameter means that it won't be changed by the constructor
     void setType(GateType type);
     void setFaninGates(const std::vector<Gate*>& faninGates);
     void setFanoutGates(const std::vector<Gate*>& fanoutGates);
     void setNextGate(Gate* nextGate);
+    void setLevel(int level);
 
     void addFaninGate(Gate* faninGate);
     void addFanoutGate(Gate* fanoutGate);
