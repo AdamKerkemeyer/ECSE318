@@ -2,7 +2,7 @@ module main(G0,G1,G2,G3,G17);
 
 input G0;
 input G1;
-input G2;
+input G2; 
 input G3;
 
 output G17;

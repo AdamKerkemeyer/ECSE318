@@ -53,7 +53,7 @@ void Parser::parse() {
         if(line.find("wire") == 0){
             line = std::regex_replace(line, std::regex("^\\s+|\\s+$"), "");
             parsingWires = true;           //Replace leading and/or trailing whitespace with nothing
-            line = line.substr(4);          //remove keyword "wire" the first time we see it
+            line = line.substr(6);          //remove keyword "wire  " the first time we see it
         }
         if (parsingWires) {
             std::istringstream wireStream(line);
@@ -83,6 +83,7 @@ void Parser::parseLine(const std::string& line) {
     //Check if line is input/output, if not, handle as a gate (wires are processed in parse)
     if (line.find("input") == 0) {
         std::string name = line.substr(6);                  //delete "input "
+        name = std::regex_replace(name, std::regex(";"), "");        
         name = std::regex_replace(name, std::regex("^\\s+|\\s+$"), "");
         Gate* inputGate = new Gate(name, GateType::INPUT);  //Remove any other whitespace
         gates.push_back(inputGate);
@@ -92,6 +93,7 @@ void Parser::parseLine(const std::string& line) {
 
     else if (line.find("output") == 0) {
         std::string name = line.substr(7);                  //delete "output "
+        name = std::regex_replace(name, std::regex(";"), "");        
         name = std::regex_replace(name, std::regex("^\\s+|\\s+$"), "");
         Gate* outputGate = new Gate(name, GateType::OUTPUT);
         gates.push_back(outputGate);

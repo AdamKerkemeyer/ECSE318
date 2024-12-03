@@ -44,6 +44,9 @@ g++ -o main main.cpp Parser.cpp Gate.cpp
 # Run the program
 ./main
 
-# Follow the prompt
-Enter the name of the .v file to parse: example.v
+TODO:
+Change main to ask if the user would like a printout of gates
+Make printout a callable function that uses the getNextGate() instead of vector array.
+Potentially rework parser to not use a vector of gates when instantiating.
+
 */
