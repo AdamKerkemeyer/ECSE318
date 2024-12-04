@@ -3,10 +3,9 @@
 
 #include "Gate.hpp"
 #include <vector>
+#include <string>
 
-using namespace std;
-
-namespace Sim
+namespace ECSE381Sim
 {
 
 enum class logic{//Three valued logic has... three values
@@ -40,15 +39,17 @@ const logic xorTable[3][3] = {
 
 const logic notTable[3] = {logic::one, logic::zero, logic::X};
 
+logic inputScan();
+logic tableLookup();
+
 class Simulator{
     public:
-        Simulator(const vector<Gate*> Gates);
-        
-
+        Simulator(const std::vector<Gate*> Gates, const std::string& testfile, const std::string& gatefile);
+        void runSim();//Top level function. Call to begin running the simulation
+        std::vector<logic> runCycle();//Runs a single clock cycle. Returns list of next dff values
     private:
-        vector<Gate*> Gates;
-
-
+        std::vector<Gate*> Gates;
+        std::vector<std::vector<logic>> stimulus;
 };
 }
 #endif
