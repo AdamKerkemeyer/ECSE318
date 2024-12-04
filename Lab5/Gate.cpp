@@ -27,6 +27,10 @@ const int Gate::getLevel() {
     return level;
 }
 
+const logic Gate::getState() {
+    return state;
+}
+
 void Gate::setName(const std::string& name) {
     this->name = name;
 }
@@ -50,6 +54,11 @@ void Gate::setNextGate(Gate* nextGate) {
 void Gate::setLevel(int level){
     this->level = level;
 }
+
+void Gate::setState(logic state){
+    this->state = state;
+}
+
 void Gate::addFaninGate(Gate* faninGate) {
     faninGates.push_back(faninGate);        //push_back may not be the most efficient for performance, we will see how this handles big tests
 }
