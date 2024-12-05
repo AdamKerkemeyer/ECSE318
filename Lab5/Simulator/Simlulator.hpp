@@ -1,7 +1,7 @@
 #ifndef SIM_H
 #define SIM_H
 
-#include "Gate.hpp"
+#include "../Gate.hpp"
 #include <vector>
 #include <string>
 #include <memory>
