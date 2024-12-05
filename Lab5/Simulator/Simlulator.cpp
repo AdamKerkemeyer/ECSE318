@@ -66,6 +66,13 @@ Simulator::Simulator(const std::string& testfile, const std::string& gatefile){
         this->addToList(newGate);
 
         //Set the fanout
+        for (std::string foString : fanoutStrings){
+            //Check gate's level
+            for(std::shared_ptr<Gate> gate : Gates->at(newGate->getLevel())){
+                //for each item in that gate's fanout
+                for
+            }
+        }
 
         //Set the fanin
         lineNum = lineNum + 1;
