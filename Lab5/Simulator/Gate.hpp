@@ -32,8 +32,8 @@ class Gate {
 private:
     std::string name;
     GateType type;
-    std::vector<std::shared_ptr<Gate>> faninGates;      //Vector is a dynamic array
-    std::vector<std::shared_ptr<Gate>> fanoutGates;
+    std::vector<std::shared_ptr<Gate>> faninGates = std::vector<std::shared_ptr<Gate>>(0);      //Vector is a dynamic array
+    std::vector<std::shared_ptr<Gate>> fanoutGates = std::vector<std::shared_ptr<Gate>>(0);
     std::shared_ptr<Gate> nextGate;                     //Gate* is a pointer to the Gate class
     int level;                          //level is a value used to keep track of simluation order.
     logic state;                        //Holds the present output state of the gate during simlulation
@@ -52,8 +52,8 @@ public:
 
     void setName(const std::string& name);  //const here before a parameter means that it won't be changed by the constructor
     void setType(GateType type);
-    void setFaninGates(const std::vector<std::shared_ptr<Gate>> & faninGates);
-    void setFanoutGates(const std::vector<std::shared_ptr<Gate>> & fanoutGates);
+    void setFaninGates(const std::vector<std::shared_ptr<Gate>>& faninGates);
+    void setFanoutGates(const std::vector<std::shared_ptr<Gate>>& fanoutGates);
     void setNextGate(std::shared_ptr<Gate> nextGate);
     void setLevel(const int level);
     void setState(const logic state);

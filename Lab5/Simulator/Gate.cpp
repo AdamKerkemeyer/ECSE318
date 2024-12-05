@@ -2,7 +2,7 @@
 #include <memory>
 
 Gate::Gate(const std::string& name, GateType type)
-    : name(name), type(type), faninGates(), fanoutGates(), nextGate(nullptr), level(-1) {}
+    : name(name), type(type), nextGate(nullptr), level(-1) {}
 
 std::string Gate::getName() const {
     return name;

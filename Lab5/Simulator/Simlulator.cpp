@@ -67,19 +67,97 @@ Simulator::Simulator(const std::string& testfile, const std::string& gatefile){
 
         //Set the fanout
         for (std::string foString : fanoutStrings){
-            //Check gate's level
+            //Check newgate's level
+            bool bufferFound = false;
             for(std::shared_ptr<Gate> gate : Gates->at(newGate->getLevel())){
                 //for each item in that gate's fanout
-                for
+                for(std::shared_ptr<Gate> buffer : gate->getFanoutGates()){
+                    if (buffer->getName() == foString){//matching buffer found, update pointers
+                        newGate->addFanoutGate(buffer);//newGate reference to buffer
+                        buffer->addFaninGate(newGate);//buffer reference to newGate
+                        bufferFound = true;
+                    }
+                    if (bufferFound){
+                        break;
+                    }
+                }
+                if (bufferFound){
+                    break;
+                }
+            }
+            if (bufferFound == false){//if we haven't already found the buffer, check the next levels fanin
+                for(std::shared_ptr<Gate> gate : Gates->at(newGate->getLevel() + 1)){
+                    //for each item in that gate's fanout
+                    for(std::shared_ptr<Gate> buffer : gate->getFaninGates()){
+                        if (buffer->getName() == foString){//matching buffer found, update pointers
+                            newGate->addFanoutGate(buffer);//newGate reference to buffer
+                            buffer->addFaninGate(newGate);//buffer reference to newGate
+                            bufferFound = true;
+                        }
+                        if (bufferFound){
+                            break;
+                        }
+                    }
+                    if (bufferFound){
+                        break;
+                    }
+                }
+            }
+            if (bufferFound == false){//If we haven't found the buffer now, it does not exist, so make it
+                newGate->addFanoutGate(std::make_shared<Gate>(foString, GateType::BUFFER));//newGate reference to buffer
+                newGate->getFanoutGates().back()->addFaninGate(newGate);//buffer reference to newGate
             }
         }
 
         //Set the fanin
+        for (std::string fiString : faninStrings){
+            //Check newgate's level
+            bool bufferFound = false;
+            for(std::shared_ptr<Gate> gate : Gates->at(newGate->getLevel())){
+                //for each item in that gate's fanin
+                for(std::shared_ptr<Gate> buffer : gate->getFaninGates()){
+                    if (buffer->getName() == fiString){//matching buffer found, update pointers
+                        newGate->addFaninGate(buffer);//newGate reference to buffer
+                        buffer->addFanoutGate(newGate);//buffer reference to newGate
+                        bufferFound = true;
+                    }
+                    if (bufferFound){
+                        break;
+                    }
+                }
+                if (bufferFound){
+                    break;
+                }
+            }
+            if (bufferFound == false){//if we haven't already found the buffer, check the previous levels fanin
+                for(std::shared_ptr<Gate> gate : Gates->at(newGate->getLevel() - 1)){
+                    //for each item in that gate's fanout
+                    for(std::shared_ptr<Gate> buffer : gate->getFanoutGates()){
+                        if (buffer->getName() == fiString){//matching buffer found, update pointers
+                            newGate->addFaninGate(buffer);//newGate reference to buffer
+                            buffer->addFanoutGate(newGate);//buffer reference to newGate
+                            bufferFound = true;
+                        }
+                        if (bufferFound){
+                            break;
+                        }
+                    }
+                    if (bufferFound){
+                        break;
+                    }
+                }
+            }
+            if (bufferFound == false){//If we haven't found the buffer now, it does not exist, so make it
+                newGate->addFaninGate(std::make_shared<Gate>(fiString, GateType::BUFFER));//newGate reference to buffer
+                newGate->getFaninGates().back()->addFanoutGate(newGate);//buffer reference to newGate
+            }
+        }
+
+
         lineNum = lineNum + 1;
     }
 
     //Read test file into stimulus datastructure
-    //Create a bunch of gates and put them into the gate data sturcture
     //Check if loading in worked, number of input chars should equal num of inputs.
 }
 
