@@ -65,7 +65,7 @@ void Parser::parse() {
                     parsingWires = false;  //Exit wire loop
                 }
                 if(!wire.empty()){
-                    Gate* wireGate = new Gate(wire, GateType::BUFFER);
+                    auto wireGate = std::make_shared<Gate>(wire, GateType::BUFFER);
                     gates.push_back(wireGate);
                     gateMap[wire] = wireGate;
                 }
@@ -85,7 +85,7 @@ void Parser::parseLine(const std::string& line) {
         std::string name = line.substr(6);                  //delete "input "
         name = std::regex_replace(name, std::regex(";"), "");        
         name = std::regex_replace(name, std::regex("^\\s+|\\s+$"), "");
-        Gate* inputGate = new Gate(name, GateType::INPUT);  //Remove any other whitespace
+        auto inputGate = std::make_shared<Gate>(name, GateType::INPUT);
         gates.push_back(inputGate);
         gateMap[name] = inputGate;
         return;
@@ -95,7 +95,7 @@ void Parser::parseLine(const std::string& line) {
         std::string name = line.substr(7);                  //delete "output "
         name = std::regex_replace(name, std::regex(";"), "");        
         name = std::regex_replace(name, std::regex("^\\s+|\\s+$"), "");
-        Gate* outputGate = new Gate(name, GateType::OUTPUT);
+        auto outputGate = std::make_shared<Gate>(name, GateType::OUTPUT);
         gates.push_back(outputGate);
         gateMap[name] = outputGate;
         return;
@@ -111,7 +111,7 @@ void Parser::parseLine(const std::string& line) {
             std::string connections = match[3];
 
             GateType type = stringToGateType(typeStr);
-            Gate* gate = new Gate(name, type);
+            auto gate = std::make_shared<Gate>(name, type);
             gates.push_back(gate);
             gateMap[name] = gate;
 
@@ -134,13 +134,13 @@ void Parser::parseLine(const std::string& line) {
     }
 }
 
-void Parser::connectGates(const std::string& output, const std::vector<std::string>& inputs, Gate* gate) {
+void Parser::connectGates(const std::string& output, const std::vector<std::string>& inputs, std::shared_ptr<Gate> gate) {
     //Skip if the gate type is an input or output
     if (gate->getType() == GateType::INPUT || gate->getType() == GateType::OUTPUT) {
         return;
     }
     
-    Gate* outputGate = gateMap[output];         //Find the output wire/buffer in the unordered map
+    auto outputGate = gateMap[output];          //Find the output wire/buffer in the unordered map
     if(!outputGate) {                           //Throw error if we can't find the gate
         std::cerr << "Error: Output gate " << output << " not found in gateMap/not declared in file." << std::endl;
         return;
@@ -149,7 +149,7 @@ void Parser::connectGates(const std::string& output, const std::vector<std::stri
     outputGate -> addFaninGate(gate);           //Then go to the outputGate and add this gate as the fanin
 
     for (const std::string& input : inputs) {
-        Gate* inputGate = gateMap[input];
+        auto inputGate = gateMap[input];
         if(!inputGate) {
             std::cerr << "Error: Input gate " << input << " not found in gateMap/not declared in file." << std::endl;
             return;
@@ -159,6 +159,6 @@ void Parser::connectGates(const std::string& output, const std::vector<std::stri
     }
 }
 
-const std::vector<Gate*>& Parser::getGates() const {
+const std::vector<std::shared_ptr<Gate>>& Parser::getGates() const {
     return gates;
 }

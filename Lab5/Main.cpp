@@ -1,7 +1,7 @@
 #include "Parser.hpp"
 #include <iostream>
 #include <fstream>      //Need to create, read from, and write to files
-void makeTXT(const std::string& filename, const std::vector<Gate*>& gates) {
+void makeTXT(const std::string& filename, const std::vector<std::shared_ptr<Gate>>& gates) {
     // Replace the ".v" extension from the filename to ".txt"
     std::string txtFilename = filename.substr(0, filename.find_last_of('.')) + ".txt";
     
@@ -12,7 +12,7 @@ void makeTXT(const std::string& filename, const std::vector<Gate*>& gates) {
     }
 
     // Write gate details to the file
-    for (const Gate* gate : gates) {
+    for (const auto& gate : gates) {
         outFile << "GATETYPE{" << gateTypeToString(gate->getType()) << "} ";
         outFile << "OUTPUT{" << (gate->getType() == GateType::OUTPUT ? "TRUE" : "FALSE") << "} ";        
         outFile << "GATELEVEL{" << gate->getLevel() << "} ";
@@ -58,12 +58,13 @@ int main() {
     Parser parser(filename);
     parser.parse();
 
-    const std::vector<Gate*>& gates = parser.getGates();
+    const std::vector<std::shared_ptr<Gate>>& gates = parser.getGates();
     std::cout << "Parsed " << gates.size() << " gates from the file." << std::endl;
 
     makeTXT(filename, gates);
 
     /* Original Printout:
+    Don't delete, I am going to put this in a function that will run on the terminal because it puts the information in the most readable format
     // Print details of each gate, including fanin and fanout gates
     for (const Gate* gate : gates) {
         std::cout << "Gate: " << gate->getName() << ", Type: " << gateTypeToString(gate->getType()) << std::endl;

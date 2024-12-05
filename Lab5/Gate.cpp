@@ -1,7 +1,8 @@
 #include "Gate.hpp"
+#include <memory>
 
 Gate::Gate(const std::string& name, GateType type)
-    : name(name), type(type), faninGates(), fanoutGates(), nextGate(nullptr), level(-1) {}
+    : name(name), type(type), nextGate(nullptr), level(-1) {}
 
 std::string Gate::getName() const {
     return name;
@@ -11,15 +12,15 @@ GateType Gate::getType() const {
     return type;
 }
 
-const std::vector<Gate*>& Gate::getFaninGates() const {
+const std::vector<std::shared_ptr<Gate>>& Gate::getFaninGates() const {
     return faninGates;
 }
 
-const std::vector<Gate*>& Gate::getFanoutGates() const {
+const std::vector<std::shared_ptr<Gate>>& Gate::getFanoutGates() const {
     return fanoutGates;
 }
 
-Gate* Gate::getNextGate() const {
+std::shared_ptr<Gate> Gate::getNextGate() const {
     return nextGate;
 }
 
@@ -39,15 +40,15 @@ void Gate::setType(GateType type) {
     this->type = type;
 }
 
-void Gate::setFaninGates(const std::vector<Gate*>& faninGates) {
+void Gate::setFaninGates(const std::vector<std::shared_ptr<Gate>>& faninGates) {
     this->faninGates = faninGates;
 }
 
-void Gate::setFanoutGates(const std::vector<Gate*>& fanoutGates) {
+void Gate::setFanoutGates(const std::vector<std::shared_ptr<Gate>>& fanoutGates) {
     this->fanoutGates = fanoutGates;
 }
 
-void Gate::setNextGate(Gate* nextGate) {
+void Gate::setNextGate(std::shared_ptr<Gate> nextGate) {
     this->nextGate = nextGate;
 }
 
@@ -59,10 +60,10 @@ void Gate::setState(logic state){
     this->state = state;
 }
 
-void Gate::addFaninGate(Gate* faninGate) {
+void Gate::addFaninGate(std::shared_ptr<Gate> faninGate) {
     faninGates.push_back(faninGate);        //push_back may not be the most efficient for performance, we will see how this handles big tests
 }
 
-void Gate::addFanoutGate(Gate* fanoutGate) {
+void Gate::addFanoutGate(std::shared_ptr<Gate> fanoutGate) {
     fanoutGates.push_back(fanoutGate);
 }

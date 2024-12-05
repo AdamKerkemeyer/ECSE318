@@ -10,21 +10,22 @@ class Parser {
 public:
     Parser(const std::string& filename);
     void parse();
-    const std::vector<Gate*>& getGates() const;
+    const std::vector<std::shared_ptr<Gate>>& getGates() const;
+    std::string gateTypeToString(GateType type);
+    GateType stringToGateType(const std::string& typeStr);
+
 
 private:
     std::string filename;
-    std::vector<Gate*> gates;
+    std::vector<std::shared_ptr<Gate>> gates;
     std::unordered_map<std::string, GateType> gateTypeMap;
-    std::unordered_map<std::string, Gate*> gateMap;
-    Gate* previousGate;                             //Remember previousGate to set a pointer
+    std::unordered_map<std::string, std::shared_ptr<Gate>> gateMap;
+    std::shared_ptr<Gate> previousGate;                      //Remember previousGate to set a pointer
     std::vector<std::string> gateLines;             //Store gate lines (GX, GX, GX) to process in a second wave
 
     void initializeGateTypeMap();
-    GateType stringToGateType(const std::string& typeStr);
     void parseLine(const std::string& line);
-    void connectGates(const std::string& output, const std::vector<std::string>& inputs, Gate* gate);
-};
+    void connectGates(const std::string& output, const std::vector<std::string>& inputs, std::shared_ptr<Gate> gate);};
 
 std::string gateTypeToString(GateType type);
 

@@ -6,6 +6,8 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+
 //#include "Simlulator.hpp"
 
 enum class GateType {
@@ -30,9 +32,9 @@ class Gate {
 private:
     std::string name;
     GateType type;
-    std::vector<Gate*> faninGates;      //Vector is a dynamic array
-    std::vector<Gate*> fanoutGates;
-    Gate* nextGate;                     //Gate* is a pointer to the Gate class
+    std::vector<std::shared_ptr<Gate>> faninGates = std::vector<std::shared_ptr<Gate>>(0);      //Vector is a dynamic array
+    std::vector<std::shared_ptr<Gate>> fanoutGates = std::vector<std::shared_ptr<Gate>>(0);
+    std::shared_ptr<Gate> nextGate;                     //Gate* is a pointer to the Gate class
     int level;                          //level is a value used to keep track of simluation order.
     logic state;                        //Holds the present output state of the gate during simlulation
 
@@ -42,22 +44,22 @@ public:
 
     std::string getName() const;            //Having const indicates calling this function will not change what it is accessing
     GateType getType() const;
-    const std::vector<Gate*>& getFaninGates() const;        //First const indicates the method returns a constant reference
-    const std::vector<Gate*>& getFanoutGates() const;       //Second indicates that the get function does not modify any member variables
-    Gate* getNextGate() const;
+    const std::vector<std::shared_ptr<Gate>> & getFaninGates() const;        //First const indicates the method returns a constant reference
+    const std::vector<std::shared_ptr<Gate>> & getFanoutGates() const;       //Second indicates that the get function does not modify any member variables
+    std::shared_ptr<Gate> getNextGate() const;
     const int getLevel() const;
     const logic getState() const;
 
     void setName(const std::string& name);  //const here before a parameter means that it won't be changed by the constructor
     void setType(GateType type);
-    void setFaninGates(const std::vector<Gate*>& faninGates);
-    void setFanoutGates(const std::vector<Gate*>& fanoutGates);
-    void setNextGate(Gate* nextGate);
+    void setFaninGates(const std::vector<std::shared_ptr<Gate>>& faninGates);
+    void setFanoutGates(const std::vector<std::shared_ptr<Gate>>& fanoutGates);
+    void setNextGate(std::shared_ptr<Gate> nextGate);
     void setLevel(const int level);
     void setState(const logic state);
 
-    void addFaninGate(Gate* faninGate);
-    void addFanoutGate(Gate* fanoutGate);
+    void addFaninGate(std::shared_ptr<Gate> faninGate);
+    void addFanoutGate(std::shared_ptr<Gate> fanoutGate);
 };
 
 #endif
