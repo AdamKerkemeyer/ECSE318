@@ -47,6 +47,11 @@ g++ -o main main.cpp Parser.cpp Gate.cpp
 TODO:
 Change main to ask if the user would like a printout of gates
 Make printout a callable function that uses the getNextGate() instead of vector array.
-Potentially rework parser to not use a vector of gates when instantiating.
+printout should also write to a .txt file the simulator can read. 
 
+Potentially rework parser to not use a vector of gates when instantiating.
+Rework parser input/output to parse by semicolon instead of line.
+Split wires that go to multiple gates into multiple buffers
+
+Write a prospectus to submit with it
 */
