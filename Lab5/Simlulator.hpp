@@ -4,6 +4,7 @@
 #include "Gate.hpp"
 #include <vector>
 #include <string>
+#include <memory>
 
 
 
@@ -41,7 +42,7 @@ const logic notTable[3] = {logic::one, logic::zero, logic::X};
 logic inputScanEvaluate();
 logic tableEvaluate();
 
-logic checkTable(const GateType type, const logic in1, const logic in2){//evaulates two gates based on table lookup
+logic checkTable(const GateType& type, const logic& in1, const logic& in2){//evaulates two gates based on table lookup
     switch(type){
         case GateType::AND:
             return andTable[static_cast<int>(in1)][static_cast<int>(in2)];
@@ -58,13 +59,14 @@ logic checkTable(const GateType type, const logic in1, const logic in2){//evaula
 
 class Simulator{
     public:
-        Simulator(const std::vector<Gate*> Gates, const std::string& testfile, const std::string& gatefile);
-        ~Simulator();
+        Simulator(const std::string& testfile, const std::string& gatefile);
         void runSim();//Top level function. Call to begin running the simulation
-        std::vector<logic> runCycle(std::vector<char>*);//Runs a single clock cycle. Returns list of next dff values
+        std::vector<logic> runCycle(std::vector<char>*);//Runs a single clock cycle. Returns list of output values, dff vals are stored in the dffs themselves
     private:
-        std::vector<std::vector<Gate*>>* Gates = nullptr; //Each top level is a list of the gates of a given level
-        std::vector<std::vector<char>>* stimulus = nullptr; //Each entry in the top vector is a line. Then each line is just an array of chars
+        std::unique_ptr<std::vector<std::vector<std::unique_ptr<Gate>>>> Gates = nullptr; //Each top level is a list of the gates of a given level
+        std::unique_ptr<std::vector<std::vector<char>>> stimulus = nullptr; //Each entry in the top vector is a line. Then each line is just an array of chars
+
+        std::vector<std::string> gateData(const std::string& target, std::string& line);//returns a string of the value, modifies the line to take out the value
 };
 
 #endif

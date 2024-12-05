@@ -37,3 +37,6 @@
 *.app
 *.json
 *.exe
+
+#Evan's Test files
+playground.cpp
