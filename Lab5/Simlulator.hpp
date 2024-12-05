@@ -63,10 +63,11 @@ class Simulator{
         void runSim();//Top level function. Call to begin running the simulation
         std::vector<logic> runCycle(std::vector<char>*);//Runs a single clock cycle. Returns list of output values, dff vals are stored in the dffs themselves
     private:
-        std::unique_ptr<std::vector<std::vector<std::unique_ptr<Gate>>>> Gates = nullptr; //Each top level is a list of the gates of a given level
+        std::unique_ptr<std::vector<std::vector<std::shared_ptr<Gate>>>> Gates = std::make_unique<std::vector<std::vector<std::shared_ptr<Gate>>>>(0); //Each top level is a list of the gates of a given level
         std::unique_ptr<std::vector<std::vector<char>>> stimulus = nullptr; //Each entry in the top vector is a line. Then each line is just an array of chars
 
         std::vector<std::string> gateData(const std::string& target, std::string& line);//returns a string of the value, modifies the line to take out the value
+        void addToList(const std::shared_ptr<Gate>& gate);//Adds the gate to Gates, and initializes top level size of Gates array correctly. DOES NOT LINK BUFFERS
 };
 
 #endif
