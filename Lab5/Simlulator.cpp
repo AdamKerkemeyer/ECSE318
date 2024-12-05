@@ -22,26 +22,30 @@ Simulator::Simulator(const std::string& testfile, const std::string& gatefile){
     //Check if loading in worked, number of input chars should equal num of inputs.
 }
 
-std::vector<std::string> Simulator::gateData(const std::string& target, std::string& line){
+
+std::vector<std::string> Simulator::gateData(const std::string& target, std::string& line){//Takes in type of gate info, spits out array of that gate info, and deletes the gate info from line
     size_t startPos = line.find(target + "{");
     size_t endPos = line.find("}");
     size_t inputLength = target.length();
     std::string valString = line.substr(startPos + inputLength + 1, endPos - (startPos + inputLength + 1));
+    line.erase(startPos, endPos + 1 - startPos);
     if (valString.find(",") == std::string::npos){
         return std::vector(1, valString);
     }
     else{
-        std::vector<std::string> result(1);
+        std::vector<std::string> result(valString.length());
         size_t newpos = 0;
         size_t oldpos = 0;
+        size_t vectPos = 0;
         while (newpos != std::string::npos){
             newpos = valString.find(",",oldpos);
-            result.push_back(valString.substr(oldpos, newpos-oldpos));
-            oldpos = newpos;
+            result[vectPos] = (valString.substr(oldpos, newpos-oldpos));
+            oldpos = newpos + 1;
+            vectPos = vectPos + 1;
         }
+        result.shrink_to_fit();
         return result;
     }
-
 }
 
 void Simulator::runSim(){
