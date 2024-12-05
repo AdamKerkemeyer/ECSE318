@@ -6,7 +6,7 @@
 
 #include <string>
 #include <vector>
-#include "Simlulator.hpp"
+//#include "Simlulator.hpp"
 
 enum class GateType {
     AND,
@@ -18,7 +18,13 @@ enum class GateType {
     INPUT,
     OUTPUT,
     BUFFER
-};                                      //Without this the compiler sees one declaration with two types. 
+};                                         //Without this the compiler sees one declaration with two types. 
+
+enum class logic{//Three valued logic has... three values
+    zero = 0,
+    one = 1,
+    X = 2
+};
 
 class Gate {
 private:
@@ -28,7 +34,7 @@ private:
     std::vector<Gate*> fanoutGates;
     Gate* nextGate;                     //Gate* is a pointer to the Gate class
     int level;                          //level is a value used to keep track of simluation order.
-    logic state;            //Holds the present output state of the gate during simlulation
+    logic state;                        //Holds the present output state of the gate during simlulation
 
 public:
     // Saab: XOR characters for 2^8 buckets for hash map (we pick 8 because each string character is 8 bits)
@@ -39,8 +45,8 @@ public:
     const std::vector<Gate*>& getFaninGates() const;        //First const indicates the method returns a constant reference
     const std::vector<Gate*>& getFanoutGates() const;       //Second indicates that the get function does not modify any member variables
     Gate* getNextGate() const;
-    const int getLevel();
-    const logic getState();
+    const int getLevel() const;
+    const logic getState() const;
 
     void setName(const std::string& name);  //const here before a parameter means that it won't be changed by the constructor
     void setType(GateType type);

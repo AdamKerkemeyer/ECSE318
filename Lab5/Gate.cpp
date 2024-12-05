@@ -23,11 +23,11 @@ Gate* Gate::getNextGate() const {
     return nextGate;
 }
 
-const int Gate::getLevel() {
+const int Gate::getLevel() const {
     return level;
 }
 
-const logic Gate::getState() {
+const logic Gate::getState() const{
     return state;
 }
 

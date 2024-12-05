@@ -1,5 +1,48 @@
 #include "Parser.hpp"
 #include <iostream>
+#include <fstream>      //Need to create, read from, and write to files
+void makeTXT(const std::string& filename, const std::vector<Gate*>& gates) {
+    // Replace the ".v" extension from the filename to ".txt"
+    std::string txtFilename = filename.substr(0, filename.find_last_of('.')) + ".txt";
+    
+    std::ofstream outFile(txtFilename);
+    if (!outFile) {
+        std::cerr << "Error creating file: " << txtFilename << std::endl;
+        return;
+    }
+
+    // Write gate details to the file
+    for (const Gate* gate : gates) {
+        outFile << "GATETYPE{" << gateTypeToString(gate->getType()) << "} ";
+        outFile << "OUTPUT{" << (gate->getType() == GateType::OUTPUT ? "TRUE" : "FALSE") << "} ";        
+        outFile << "GATELEVEL{" << gate->getLevel() << "} ";
+        outFile << "FANIN{";
+        if (gate->getType() != GateType::BUFFER && gate->getType() != GateType::INPUT && gate->getType() != GateType::OUTPUT) {
+            for (size_t i = 0; i < gate->getFaninGates().size(); ++i) {
+                outFile << gate->getFaninGates()[i]->getName();
+                if (i < gate->getFaninGates().size() - 1) {
+                    outFile << ",";         //Make sure we don't add a last unecessary comma
+                }
+            }
+        }
+        outFile << "} ";
+        
+        outFile << "FANOUT{";
+        if (gate->getType() != GateType::BUFFER && gate->getType() != GateType::INPUT && gate->getType() != GateType::OUTPUT) {
+            for (size_t i = 0; i < gate->getFanoutGates().size(); ++i) {
+                outFile << gate->getFanoutGates()[i]->getName();
+                if (i < gate->getFanoutGates().size() - 1) {
+                    outFile << ",";         //Make sure we don't add a last unecessary comma
+                }
+            }
+        }
+        outFile << "} ";
+        outFile << "GATENAME{" << gate->getName() << "}\n";
+    }
+
+    outFile.close();
+    std::cout << "File " << txtFilename << " created successfully." << std::endl;
+}
 
 int main() {
     std::string filename;
@@ -18,6 +61,9 @@ int main() {
     const std::vector<Gate*>& gates = parser.getGates();
     std::cout << "Parsed " << gates.size() << " gates from the file." << std::endl;
 
+    makeTXT(filename, gates);
+
+    /* Original Printout:
     // Print details of each gate, including fanin and fanout gates
     for (const Gate* gate : gates) {
         std::cout << "Gate: " << gate->getName() << ", Type: " << gateTypeToString(gate->getType()) << std::endl;
@@ -34,9 +80,10 @@ int main() {
         }
         std::cout << std::endl;
     }
-
+    */
     return 0;
 }
+
 /*
 # Compile the program
 g++ -o main main.cpp Parser.cpp Gate.cpp
