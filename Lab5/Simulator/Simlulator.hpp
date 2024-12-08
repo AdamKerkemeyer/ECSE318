@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <climits>
 
 //   0  1  X
 // 0 r  r  r
@@ -55,20 +56,23 @@ logic checkTable(const GateType& type, const logic& in1, const logic& in2){//eva
 
 class Simulator{
     public:
-        Simulator(const std::string& testfile, const std::string& gatefile);
+        Simulator();
         //void runSim();//Top level function. Call to begin running the simulation
         //std::vector<logic> runCycle(std::vector<char>*);//Runs a single clock cycle. Returns list of output values, dff vals are stored in the dffs themselves
         void printGates(); //Prints the Gates datastructure to the terminal for debugging
+        void printStimulus();//Prints the Stimulus datastruture to the terminal for debugging
     private:
         std::unique_ptr<std::vector<Gate>> Gates; //Each top level is a list of the gates of a given level
         std::unique_ptr<std::vector<std::vector<char>>> stimulus; //Each entry in the top vector is a line. Then each line is just an array of chars
         std::unordered_map<std::string, GateType> gateTypeMap;//reference type for switching between gatetype and string
+        std::vector<std::vector<unsigned int>> levels;
+        const unsigned int dummyGate = UINT_MAX;//I don't have a full dummy gate, just this constant
 
         std::vector<std::string> gateData(const std::string& target, std::string& line);//returns a string of the value, modifies the line to take out the value
         void addToList(const std::shared_ptr<Gate>& gate);//Adds the gate to Gates, and initializes top level size of Gates array correctly. DOES NOT LINK BUFFERS
         void initializeGateTypeMap();//Intializes the gatemap refernece for quick gatetype to string conversions
-        void initializeGates(const std::string& gatefile);//loads gates from file to Gates array
-        void initializeStimulus(const std::string& testfile);//Loads stimulus from file into stimulus array
+        bool initializeGates();//loads gates from file to Gates array, returns true if successful
+        bool initializeStimulus();//Loads stimulus from file into stimulus array
         GateType stringToGateType(const std::string& typeStr);//turns a string into a gatetype
 };  
 

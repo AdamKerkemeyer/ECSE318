@@ -4,24 +4,31 @@
 #include <string>
 #include <iostream>
 
-Simulator::Simulator(const std::string& testfile, const std::string& gatefile){
+Simulator::Simulator(){
 
     //Setup needed references
     initializeGateTypeMap();
 
 
     //Setup Gates
-    initializeGates(gatefile);
+    while(!initializeGates());
 
     //Read test file into stimulus datastructure
+    while(!initializeStimulus());
+
+
     //Check if loading in worked, number of input chars should equal num of inputs.
 }
 
-void Simulator::initializeGates(const std::string& gatefile){
+bool Simulator::initializeGates(){
+    std::string gatefile;
+    std::cout << "Enter the name of the gatefile to parse: ";
+    std::cin >> gatefile;
+
     std::ifstream file(gatefile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
         std::cout << "Error opening file: " << gatefile << std::endl;
-        return;
+        return false;
     }
     std::string line = "";
  
@@ -32,7 +39,7 @@ void Simulator::initializeGates(const std::string& gatefile){
         GatesSize = std::stoi(line);
     }catch (const std::invalid_argument e){
             std::cout << "first line of file must be integer" << "\n" << std::endl;
-    return;
+    return false;
     }
 
     Gates = std::make_unique<std::vector<Gate>>();
@@ -48,7 +55,6 @@ void Simulator::initializeGates(const std::string& gatefile){
 
         //get next line
         std::getline(file, line);  
-        std::cout << line << "\n";
 
         //Parse the line into mangable strings
         GateType newGateType = stringToGateType(gateData("GATETYPE", line)[0]);
@@ -91,7 +97,7 @@ void Simulator::initializeGates(const std::string& gatefile){
             Gates->at(indexNum).setLevel(std::stoi(levelString));
         }catch (const std::invalid_argument e){
             std::cout << "Invalid level entry '" << levelString << "' line " << indexNum + 2 << "\n" << std::endl;
-            return;
+            return false;
         }
 
         //Set the output 
@@ -107,7 +113,7 @@ void Simulator::initializeGates(const std::string& gatefile){
                 Gates->at(indexNum).getFaninGates().at(i) = std::stoi(faninStrings.at(i));
             }catch (const std::invalid_argument e){
                 std::cout << "Invalid fanin entry '" << levelString << "' line " << indexNum + 2 << "\n" << std::endl;
-                return;
+                return false;
             }
         }
 
@@ -117,7 +123,7 @@ void Simulator::initializeGates(const std::string& gatefile){
                 Gates->at(indexNum).getFanoutGates().at(i) = std::stoi(fanoutStrings.at(i));
             }catch (const std::invalid_argument e){
                 std::cout << "Invalid fanout entry '" << levelString << "' line " << indexNum + 2 << "\n" << std::endl;
-                return;
+                return false;
             }
         }
 
@@ -211,19 +217,56 @@ void Simulator::initializeGates(const std::string& gatefile){
         }
 */
     }
+
+    levels = std::vector<std::vector<unsigned int>>(std::stoi(levelString), std::vector<unsigned int>(0));
+
+    return true;
 }
 
-void Simulator::initializeStimulus(const std::string& testfile){
+bool Simulator::initializeStimulus(){
+    std::string testfile;
+    std::cout << "Enter the name of the testfile file to parse: ";
+    std::cin >> testfile;
+    
     std::ifstream file(testfile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
         std::cout << "Error opening file: " << testfile << std::endl;
-        return;
+        return false;
     }
     std::string line = "";
  
+    //get size of stimulus array
     std::getline(file, line);
+    size_t inner_vec_size = line.length();
 
-    
+    size_t outer_vec_size = 1;
+    while(std::getline(file, line)){
+        outer_vec_size++;
+    }
+    file.close();
+
+    std::cout << "(" << outer_vec_size << " ," << inner_vec_size <<")\n";
+
+    //initailize stimulus
+    stimulus = std::make_unique<std::vector<std::vector<char>>>(outer_vec_size, std::vector<char>(inner_vec_size));
+
+    //now actually read in the data of stimulus
+    //We parse through the array twice to ensure a contiguous memeory vector on initialization
+    file.open(testfile);
+    try{
+        for (int i = 0; i < outer_vec_size; i++){
+            std::getline(file, line);
+            int j = 0;
+            for (char signal : line){
+                stimulus->at(i).at(j) = signal;
+                j++;
+            }
+        }
+    }catch (std::out_of_range e){
+        std::cout << "Stimulus file has invalide format\n";
+        return false;
+    }
+    return true;
 }
 
 void Simulator::printGates(){
@@ -233,6 +276,18 @@ void Simulator::printGates(){
     }
     std::cout << std::endl;
 }
+
+void Simulator::printStimulus(){
+
+    for(int i = 0; i < stimulus->size(); i++){
+        std::cout << "'";
+        for (char signal : stimulus->at(i)){
+            std::cout << signal;
+        }
+        std::cout <<"'\n";
+    }
+}
+
 /* depreiated because of pointers as ints implemntation
 void Simulator::addToList(const std::shared_ptr<Gate>& gate){
     int gateLevel = gate->getLevel();
