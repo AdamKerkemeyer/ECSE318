@@ -39,6 +39,10 @@ const bool Gate::getIsOutput() const{
     return isOutput;
 }
 
+const unsigned int Gate::getSched() const{
+    return sched;
+}
+
 void Gate::setName(const std::string& name) {
     this->name = name;
 }
@@ -71,6 +75,10 @@ void Gate::setState(logic state){
 
 void Gate::setIsOutput(const bool isOutput){
     this->isOutput = isOutput;
+}
+
+void Gate::setSched(const unsigned int sched){
+    this->sched = sched;
 }
 
 void Gate::printGate(){

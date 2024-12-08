@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <climits>
 
 //#include "Simlulator.hpp"
 
@@ -41,6 +42,7 @@ public:
     const int getLevel() const;
     const logic getState() const;
     const bool getIsOutput() const;
+    const unsigned int getSched() const;
 
     void setName(const std::string& name);  //const here before a parameter means that it won't be changed by the constructor
     void setType(GateType type);
@@ -50,6 +52,7 @@ public:
     void setLevel(const int level);
     void setState(const logic state);
     void setIsOutput(const bool inOutput);
+    void setSched(const unsigned int sched);
     void printGate();
 
 private:
@@ -60,9 +63,8 @@ private:
     //std::shared_ptr<Gate> nextGate;                     //Gate* is a pointer to the Gate class
     int level;                          //level is a value used to keep track of simluation order.
     logic state;                        //Holds the present output state of the gate during simlulation
-    bool isOutput;
-
-
+    bool isOutput;                  //If true this gates state will be printed
+    unsigned int sched = UINT_MAX; //pointer to next gate to simluate. UNIT_MAX means dummy gate
 };
 
 #endif

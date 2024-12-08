@@ -218,7 +218,8 @@ bool Simulator::initializeGates(){
 */
     }
 
-    levels = std::vector<std::vector<unsigned int>>(std::stoi(levelString), std::vector<unsigned int>(0));
+    levels = std::vector<unsigned int>(std::stoi(levelString)+1, lastGate);
+
 
     return true;
 }
@@ -354,4 +355,41 @@ void Simulator::initializeGateTypeMap() {
 
 GateType Simulator::stringToGateType(const std::string& typeStr) {
     return gateTypeMap[typeStr];
+}
+
+void Simulator::scheduleFannout(const unsigned int& gate){
+    for (unsigned int fangate: Gates->at(gate).getFanoutGates()){
+        if (Gates->at(fangate).getSched() == dummyGate){//Check that the gate hasn't already been scheduled
+            Gates->at(fangate).setSched(levels.at(Gates->at(fangate).getLevel()));//Set the schedule pointer of the fanout
+            levels.at(Gates->at(fangate).getLevel()) = fangate; //put fangate into levels
+        }
+    }
+}
+
+void Simulator::simLevel(const unsigned int& level, const SimType& simtype){
+    unsigned int currentGate = levels.at(level);
+    bool levelDone = false;
+    while (!levelDone){
+        logic oldState = Gates->at(currentGate).getState();
+        if (simtype == SimType::Table){//Move this logic to higher level function calls to increase speed
+            evaluteTable(currentGate);
+        } else{
+            evaluteScan(currentGate);
+        }
+
+        if (Gates->at(currentGate).getState() != oldState){
+            scheduleFannout(currentGate);
+        }
+
+        if (Gates->at(currentGate).getSched() == lastGate){
+            levelDone = true;
+        } else{
+            unsigned int tempGate = currentGate;
+            currentGate = Gates->at(currentGate).getSched();
+            Gates->at(tempGate).setSched(dummyGate);
+        }
+    }
+    //Evalutate routine
+
+    levels.at(level) = lastGate;
 }
