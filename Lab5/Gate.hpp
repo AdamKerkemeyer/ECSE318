@@ -8,7 +8,7 @@
 #include <vector>
 #include <memory>
 
-//#include "Simlulator.hpp"
+//#include "Simulator/Simlulator.hpp"
 
 enum class GateType {
     AND,
@@ -21,6 +21,7 @@ enum class GateType {
     OUTPUT,
     BUFFER
 };                                         //Without this the compiler sees one declaration with two types. 
+
 
 enum class logic{//Three valued logic has... three values
     zero = 0,
