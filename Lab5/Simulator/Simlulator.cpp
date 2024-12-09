@@ -22,7 +22,7 @@ Simulator::Simulator(){
 
 bool Simulator::initializeGates(){
     
-    std::string gatefile = "../Example_outfile.txt";
+    std::string gatefile = "../Example_outfile2.txt";
     //std::cout << "Enter the name of the gatefile to parse: ";
     //std::cin >> gatefile;
 

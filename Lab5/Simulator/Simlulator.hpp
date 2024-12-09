@@ -77,7 +77,7 @@ class Simulator{
         void simCycleTable(const unsigned int& simpos); //simulates a full cycle (all of the levels)
         void simLevelTable(const unsigned int& level);//Simluate a given level
         void evaluteTable(const unsigned int& gate); //Evaluates a gate with a table lookup
-        logic evaluteScan(const unsigned int& gate);  //Evaluetes a gate with an input scan
+        void evaluteScan(const unsigned int& gate);  //Evaluetes a gate with an input scan
         
 };  
 
