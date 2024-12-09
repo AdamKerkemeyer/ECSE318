@@ -13,7 +13,7 @@
 // 1 r  r  r
 // X r  r  r
 
-/*not ready yet, commented out to compile
+
 const logic andTable[3][3] = {
     {logic::zero, logic::zero,logic::zero},
     {logic::zero, logic::one, logic::X},
@@ -34,25 +34,6 @@ const logic xorTable[3][3] = {
 
 const logic notTable[3] = {logic::one, logic::zero, logic::X};
 
-logic inputScanEvaluate();
-logic tableEvaluate();
-
-
-logic checkTable(const GateType& type, const logic& in1, const logic& in2){//evaulates two gates based on table lookup
-    switch(type){
-        case GateType::AND:
-            return andTable[static_cast<int>(in1)][static_cast<int>(in2)];
-        case GateType::OR:
-            return orTable[static_cast<int>(in1)][static_cast<int>(in2)];
-        case GateType::NOT:
-            return notTable[static_cast<int>(in1)];
-        case GateType::NOR:
-            return notTable[static_cast<int>(orTable[static_cast<int>(in1)][static_cast<int>(in2)])];
-        case GateType::NAND:
-            return notTable[static_cast<int>(andTable[static_cast<int>(in1)][static_cast<int>(in2)])];
-    }
-}
-*/
 
 enum class SimType {
     Table,

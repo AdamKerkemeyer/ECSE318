@@ -389,7 +389,12 @@ void Simulator::simLevel(const unsigned int& level, const SimType& simtype){
             Gates->at(tempGate).setSched(dummyGate);
         }
     }
-    //Evalutate routine
 
     levels.at(level) = lastGate;
+}
+
+logic Simulator::evaluteTable(const unsigned int& gate){
+    if (Gates->at(gate).getType() == GateType::BUFFER || Gates->at(gate).getType() == GateType::OUTPUT) Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
+    else if (Gates->at(gate).getType() == GateType::NOT) Gates->at(gate).setState(notTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState())]);
+    for 
 }
