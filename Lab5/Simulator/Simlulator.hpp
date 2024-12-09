@@ -48,6 +48,7 @@ class Simulator{
         void printGates(); //Prints the Gates datastructure to the terminal for debugging
         void printStimulus();//Prints the Stimulus datastruture to the terminal for debugging
         void SimulateTable();//Simulates the circuit with table lookup
+        void SimulateScan();//Simulates the circuit with Input Scanning
         
     private:
         std::unique_ptr<std::vector<Gate>> Gates; //Each top level is a list of the gates of a given level
@@ -76,8 +77,12 @@ class Simulator{
         //Table lookup Simulations
         void simCycleTable(const unsigned int& simpos); //simulates a full cycle (all of the levels)
         void simLevelTable(const unsigned int& level);//Simluate a given level
-        void evaluteTable(const unsigned int& gate); //Evaluates a gate with a table lookup
-        void evaluteScan(const unsigned int& gate);  //Evaluetes a gate with an input scan
+        void evaluateTable(const unsigned int& gate); //Evaluates a gate with a table lookup
+
+        //Input Scan simulation
+        void simCycleScan(const unsigned int& simpos); //simulates a full cycle (all of the levels)
+        void simLevelScan(const unsigned int& level);//Simluate a given level
+        void evaluateScan(const unsigned int& gate);  //Evaluetes a gate with an input scan
         
 };  
 

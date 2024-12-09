@@ -14,10 +14,19 @@ int main(){
     std::unique_ptr<Simulator> mySim = std::make_unique<Simulator>();
 
     
-    mySim->printGates();
-    mySim->printStimulus();
+    //mySim->printGates();
+    //mySim->printStimulus();
 
-    mySim->SimulateTable();
-
-    
+    std::string SimType = "";
+    std::cout << "Run an Input Scan simulation or a Table lookup Simulation? (I/T): ";
+    while (SimType != "I" || SimType != "T"){
+        std::cin >> SimType;
+        if (SimType == "I"){
+            mySim->SimulateScan();
+        }else if (SimType == "T"){
+            mySim->SimulateTable();
+        }else{
+            std::cout << "Enter 'I' for Input Scan, or 'T' for Table Lookup: ";
+        }
+    }
 }
