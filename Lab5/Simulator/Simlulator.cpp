@@ -21,9 +21,10 @@ Simulator::Simulator(){
 }
 
 bool Simulator::initializeGates(){
-    std::string gatefile;
-    std::cout << "Enter the name of the gatefile to parse: ";
-    std::cin >> gatefile;
+    
+    std::string gatefile = "../Example_outfile.txt";
+    //std::cout << "Enter the name of the gatefile to parse: ";
+    //std::cin >> gatefile;
 
     std::ifstream file(gatefile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
@@ -266,9 +267,9 @@ bool Simulator::initializeGates(){
 }
 
 bool Simulator::initializeStimulus(){
-    std::string testfile;
-    std::cout << "Enter the name of the testfile file to parse: ";
-    std::cin >> testfile;
+    std::string testfile = "../exStim.vec";
+    //std::cout << "Enter the name of the testfile file to parse: ";
+    //std::cin >> testfile;
     
     std::ifstream file(testfile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
@@ -416,7 +417,7 @@ GateType Simulator::stringToGateType(const std::string& typeStr) {
 char Simulator::logicToChar(const logic& val){
     if (val == logic::one) return '1';
     else if (val == logic::zero) return '0';
-    else if (val == logic::X) return 'X';
+    else return 'X';
 }
 
 void Simulator::reportStates(const std::vector<unsigned int>& array){
@@ -425,7 +426,16 @@ void Simulator::reportStates(const std::vector<unsigned int>& array){
     }
 }
 
+void Simulator::printLevels(){
+    std::cout << "levels: ";
+    for (unsigned int gate : levels){
+        std::cout << gate << ", ";
+    }
+    std::cout << "\n";
+}
+
 void Simulator::scheduleFannout(const unsigned int& gate){
+    //std::cout << "doing fanout on " << gate << "\n";
     if (Gates->at(gate).getType() == GateType::DFF){ //DFF fanouts need to be scheduled into nextLevels, not normal levels
         for (unsigned int fangate : Gates->at(gate).getFanoutGates()){
             if (Gates->at(fangate).getSched() == dummyGate){//Check that the gate hasn't already been scheduled
@@ -435,6 +445,8 @@ void Simulator::scheduleFannout(const unsigned int& gate){
         }
     }else{
         for (unsigned int fangate : Gates->at(gate).getFanoutGates()){
+            //std::cout << "scheduling gate: " << fangate << "\n";
+            //std::cout << "gate " << fangate << "sched is " << Gates->at(fangate).getSched() << "\n";
             if (Gates->at(fangate).getSched() == dummyGate){//Check that the gate hasn't already been scheduled
                 Gates->at(fangate).setSched(levels.at(Gates->at(fangate).getLevel()));//Set the schedule pointer of the fanout
                 levels.at(Gates->at(fangate).getLevel()) = fangate; //put fangate into levels
@@ -444,13 +456,15 @@ void Simulator::scheduleFannout(const unsigned int& gate){
 }
 
 void Simulator::SimulateTable(){
+    //std::cout << "Program wide\n";
     for (unsigned int simpos = 0; simpos < stimulus->size(); simpos++){
         simCycleTable(simpos);
     }
+    //std::cout << "Dummy is " << dummyGate << "\nLast is " << lastGate << "\n";
 }
 
 void Simulator::simCycleTable(const unsigned int& simpos){
-
+    //std::cout << "Cycle Wide\n";
     //Sched Dff fannouts
     levels = nextLevels;
     nextLevels.assign(nextLevels.size(), lastGate);
@@ -479,27 +493,37 @@ void Simulator::simCycleTable(const unsigned int& simpos){
 }
 
 void Simulator::simLevelTable(const unsigned int& level){
+    //std::cout << "Level Wide, level = " << level << "\n";
     unsigned int currentGate = levels.at(level);
-    bool levelDone = false;
-    while (!levelDone){
-        logic oldState = Gates->at(currentGate).getState();
-        evaluteTable(currentGate);
+    if (currentGate != lastGate){
+        bool levelDone = false;
+        while (!levelDone){
+            //std::cout << currentGate << "\n";
+            logic oldState = Gates->at(currentGate).getState();
+            evaluteTable(currentGate);
 
-        if (Gates->at(currentGate).getState() != oldState){
-            scheduleFannout(currentGate);
-        }
+           // printLevels();
+            if (Gates->at(currentGate).getState() != oldState){
+                scheduleFannout(currentGate);
+            }
+            //printLevels();
 
-        if (Gates->at(currentGate).getSched() == lastGate){
-            levelDone = true;
-        } else{
-            unsigned int tempGate = currentGate;
-            currentGate = Gates->at(currentGate).getSched();
-            Gates->at(tempGate).setSched(dummyGate);
+            if (Gates->at(currentGate).getSched() == lastGate){
+                //std::cout << "level done\n";
+                Gates->at(currentGate).setSched(dummyGate);
+                levelDone = true;
+            } else{
+                //std::cout << "to next gate\n";
+                unsigned int tempGate = currentGate;
+                currentGate = Gates->at(currentGate).getSched();
+                Gates->at(tempGate).setSched(dummyGate);
+            }
         }
     }
 }
 
 void Simulator::evaluteTable(const unsigned int& gate){
+    //std::cout << "Eval Wide\n";
     if (Gates->at(gate).getType() == GateType::BUFFER || Gates->at(gate).getType() == GateType::OUTPUT || Gates->at(gate).getType() == GateType::DFF) Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
     else if (Gates->at(gate).getType() == GateType::NOT) Gates->at(gate).setState(notTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState())]);
     else if (Gates->at(gate).getType() == GateType::AND){
@@ -529,3 +553,4 @@ void Simulator::evaluteTable(const unsigned int& gate){
         Gates->at(gate).setState(notTable[static_cast<int>(Gates->at(gate).getState())]);
     }
 }
+

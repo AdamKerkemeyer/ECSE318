@@ -69,6 +69,7 @@ class Simulator{
         GateType stringToGateType(const std::string& typeStr);//turns a string into a gatetype
         char logicToChar(const logic& val); //Turns a logic into a character for printing.
         void reportStates(const std::vector<unsigned int>& array); //Takes an inputs/outputs/dffs array and prints the states of those gates
+        void printLevels();//prints the levels array to the console
 
         //functions for simulation:
         void scheduleFannout(const unsigned int& gate);//schedules the fanout of gate

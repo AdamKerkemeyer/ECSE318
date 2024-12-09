@@ -14,6 +14,10 @@ int main(){
     std::unique_ptr<Simulator> mySim = std::make_unique<Simulator>();
 
     
-    //mySim->printGates();
+    mySim->printGates();
     mySim->printStimulus();
+
+    mySim->SimulateTable();
+
+    
 }
