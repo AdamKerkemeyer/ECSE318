@@ -33,17 +33,34 @@ bool Simulator::initializeGates(){
     std::string line = "";
  
     std::getline(file, line);
+    std::string GatesSizeString = gateData("GATES", line)[0];
+    std::string InputsSizeString = gateData("INPUTS", line)[0];
+    std::string OutputSizeString = gateData("OUTPUTS", line)[0];
+    std::string DffSizeString = gateData("DFFS", line)[0];
 
     unsigned int GatesSize;
+    unsigned int InputsSize;
+    unsigned int OutputsSize;
+    unsigned int DffsSize;
     try{//intialize gates with the correct size
-        GatesSize = std::stoi(line);
+        GatesSize = std::stoi(GatesSizeString);
+        InputsSize = std::stoi(InputsSizeString);
+        OutputsSize = std::stoi(OutputSizeString);
+        DffsSize = std::stoi(DffSizeString);
     }catch (const std::invalid_argument e){
-            std::cout << "first line of file must be integer" << "\n" << std::endl;
+            std::cout << "first line of file contains invalid size specifications" << "\n" << std::endl;
     return false;
     }
 
+    //reserve space for the arrays, but don't initialize their values yet
     Gates = std::make_unique<std::vector<Gate>>();
     Gates->reserve(GatesSize);
+    inputs = std::vector<unsigned int>();
+    inputs.reserve(InputsSize);
+    outputs = std::vector<unsigned int>();
+    outputs.reserve(OutputsSize);
+    dffs = std::vector<unsigned int>();
+    dffs.reserve(DffsSize);
 
     std::string typeString = "";
     std::string outputString = "";
@@ -91,6 +108,15 @@ bool Simulator::initializeGates(){
 
         //new gate to start building out
         Gates->push_back(Gate(nameString, newGateType, faninStrings.size(), fanoutStrings.size()));
+
+        //Record position if a special gate with a pointer to it
+        if (newGateType == GateType::DFF){
+            dffs.push_back(indexNum);
+        } else if (newGateType == GateType::OUTPUT){
+            outputs.push_back(indexNum);
+        }else if (newGateType == GateType::INPUT){
+            inputs.push_back(indexNum);
+        }
 
         //get the level
         try{
@@ -219,7 +245,22 @@ bool Simulator::initializeGates(){
     }
 
     levels = std::vector<unsigned int>(std::stoi(levelString)+1, lastGate);
+    nextLevels = std::vector<unsigned int>(std::stoi(levelString)+1, lastGate);
 
+    //Gates, inputs, outputs, dffs, should match the specifed size we speced at the start of the file.
+    if (Gates->size() != GatesSize){
+        std::cout << "Error: Specified number of gates is: " << GatesSize << ", File contained this many Gates: " << Gates->size() << "\n";
+        return false;
+    } else if (inputs.size() != InputsSize){
+        std::cout << "Error: Specified number of inputs is: " << InputsSize << ", File contained this many Inputs: " << inputs.size() << "\n";
+        return false;
+    } else if (outputs.size() != OutputsSize){
+        std::cout << "Error: Specified number of outputs is: " << OutputsSize << ", File contained this many Outputs: " << outputs.size() << "\n";
+        return false;
+    } else if (dffs.size() != DffsSize){
+        std::cout << "Error: Specified number of dffs is: " << DffsSize << ", File contained this many dffs: " << dffs.size() << "\n";
+        return false;
+    }
 
     return true;
 }
@@ -240,6 +281,12 @@ bool Simulator::initializeStimulus(){
     std::getline(file, line);
     size_t inner_vec_size = line.length();
 
+    //the stimulus array size needs to equal the number of inputs
+    if (inner_vec_size != inputs.size()){
+        std::cout << "Error: Detected " << inputs.size() << " inputs, but stimulus for " << inner_vec_size << " inputs\n";
+        return false;
+    }
+
     size_t outer_vec_size = 1;
     while(std::getline(file, line)){
         outer_vec_size++;
@@ -249,7 +296,7 @@ bool Simulator::initializeStimulus(){
     std::cout << "(" << outer_vec_size << " ," << inner_vec_size <<")\n";
 
     //initailize stimulus
-    stimulus = std::make_unique<std::vector<std::vector<char>>>(outer_vec_size, std::vector<char>(inner_vec_size));
+    stimulus = std::make_unique<std::vector<std::vector<logic>>>(outer_vec_size, std::vector<logic>(inner_vec_size));
 
     //now actually read in the data of stimulus
     //We parse through the array twice to ensure a contiguous memeory vector on initialization
@@ -259,7 +306,16 @@ bool Simulator::initializeStimulus(){
             std::getline(file, line);
             int j = 0;
             for (char signal : line){
-                stimulus->at(i).at(j) = signal;
+                if (signal == '0'){
+                    stimulus->at(i).at(j) = logic::zero;
+                }else if (signal == '1'){
+                    stimulus->at(i).at(j) = logic::one;
+                }else if (signal =='X' || signal == 'x'){
+                    stimulus->at(i).at(j) = logic::X;
+                }else{
+                    std::cout << "Non logic value '" << signal << "' detected in stimulus line " << i << "\n";
+                    return false;
+                }
                 j++;
             }
         }
@@ -282,8 +338,8 @@ void Simulator::printStimulus(){
 
     for(int i = 0; i < stimulus->size(); i++){
         std::cout << "'";
-        for (char signal : stimulus->at(i)){
-            std::cout << signal;
+        for (logic signal : stimulus->at(i)){
+            std::cout << logicToChar(signal);
         }
         std::cout <<"'\n";
     }
@@ -357,25 +413,77 @@ GateType Simulator::stringToGateType(const std::string& typeStr) {
     return gateTypeMap[typeStr];
 }
 
+char Simulator::logicToChar(const logic& val){
+    if (val == logic::one) return '1';
+    else if (val == logic::zero) return '0';
+    else if (val == logic::X) return 'X';
+}
+
+void Simulator::reportStates(const std::vector<unsigned int>& array){
+    for (unsigned int gate : array){
+        std::cout << logicToChar(Gates->at(gate).getState());
+    }
+}
+
 void Simulator::scheduleFannout(const unsigned int& gate){
-    for (unsigned int fangate: Gates->at(gate).getFanoutGates()){
-        if (Gates->at(fangate).getSched() == dummyGate){//Check that the gate hasn't already been scheduled
-            Gates->at(fangate).setSched(levels.at(Gates->at(fangate).getLevel()));//Set the schedule pointer of the fanout
-            levels.at(Gates->at(fangate).getLevel()) = fangate; //put fangate into levels
+    if (Gates->at(gate).getType() == GateType::DFF){ //DFF fanouts need to be scheduled into nextLevels, not normal levels
+        for (unsigned int fangate : Gates->at(gate).getFanoutGates()){
+            if (Gates->at(fangate).getSched() == dummyGate){//Check that the gate hasn't already been scheduled
+                Gates->at(fangate).setSched(nextLevels.at(Gates->at(fangate).getLevel()));//Set the schedule pointer of the fanout
+                nextLevels.at(Gates->at(fangate).getLevel()) = fangate; //put fangate into levels
+            }
+        }
+    }else{
+        for (unsigned int fangate : Gates->at(gate).getFanoutGates()){
+            if (Gates->at(fangate).getSched() == dummyGate){//Check that the gate hasn't already been scheduled
+                Gates->at(fangate).setSched(levels.at(Gates->at(fangate).getLevel()));//Set the schedule pointer of the fanout
+                levels.at(Gates->at(fangate).getLevel()) = fangate; //put fangate into levels
+            }
         }
     }
 }
 
-void Simulator::simLevel(const unsigned int& level, const SimType& simtype){
+void Simulator::SimulateTable(){
+    for (unsigned int simpos = 0; simpos < stimulus->size(); simpos++){
+        simCycleTable(simpos);
+    }
+}
+
+void Simulator::simCycleTable(const unsigned int& simpos){
+
+    //Sched Dff fannouts
+    levels = nextLevels;
+    nextLevels.assign(nextLevels.size(), lastGate);
+
+    //Read inputs
+    for (unsigned int i = 0; i < inputs.size(); i++){
+        if (Gates->at(inputs.at(i)).getState() != stimulus->at(simpos).at(i)){ //input state changed
+            Gates->at(inputs.at(i)).setState(stimulus->at(simpos).at(i));//set new state
+            scheduleFannout(inputs.at(i));//Schedule that inputs fanouts
+        }
+    }
+
+    //run all level sims
+    for (unsigned int lvl = 1; lvl < levels.size(); lvl ++){
+        simLevelTable(lvl);
+    }
+
+    //print inputs, outputs, and Dffs
+    std::cout << "INPUTS   :";
+    reportStates(inputs);
+    std::cout << "\nSTATE   :";
+    reportStates(dffs);
+    std::cout << "\nOUTPUT  :";
+    reportStates(outputs);
+    std::cout << "\n\n";
+}
+
+void Simulator::simLevelTable(const unsigned int& level){
     unsigned int currentGate = levels.at(level);
     bool levelDone = false;
     while (!levelDone){
         logic oldState = Gates->at(currentGate).getState();
-        if (simtype == SimType::Table){//Move this logic to higher level function calls to increase speed
-            evaluteTable(currentGate);
-        } else{
-            evaluteScan(currentGate);
-        }
+        evaluteTable(currentGate);
 
         if (Gates->at(currentGate).getState() != oldState){
             scheduleFannout(currentGate);
@@ -389,11 +497,9 @@ void Simulator::simLevel(const unsigned int& level, const SimType& simtype){
             Gates->at(tempGate).setSched(dummyGate);
         }
     }
-
-    levels.at(level) = lastGate;
 }
 
-logic Simulator::evaluteTable(const unsigned int& gate){
+void Simulator::evaluteTable(const unsigned int& gate){
     if (Gates->at(gate).getType() == GateType::BUFFER || Gates->at(gate).getType() == GateType::OUTPUT || Gates->at(gate).getType() == GateType::DFF) Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
     else if (Gates->at(gate).getType() == GateType::NOT) Gates->at(gate).setState(notTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState())]);
     else if (Gates->at(gate).getType() == GateType::AND){

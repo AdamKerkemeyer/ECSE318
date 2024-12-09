@@ -47,12 +47,17 @@ class Simulator{
         //std::vector<logic> runCycle(std::vector<char>*);//Runs a single clock cycle. Returns list of output values, dff vals are stored in the dffs themselves
         void printGates(); //Prints the Gates datastructure to the terminal for debugging
         void printStimulus();//Prints the Stimulus datastruture to the terminal for debugging
+        void SimulateTable();//Simulates the circuit with table lookup
+        
     private:
         std::unique_ptr<std::vector<Gate>> Gates; //Each top level is a list of the gates of a given level
-        std::unique_ptr<std::vector<std::vector<char>>> stimulus; //Each entry in the top vector is a line. Then each line is just an array of chars
+        std::unique_ptr<std::vector<std::vector<logic>>> stimulus; //Each entry in the top vector is a line. Then each line is just an array of chars
         std::unordered_map<std::string, GateType> gateTypeMap;//reference type for switching between gatetype and string
-        std::vector<unsigned int> levels;     //Holds the first (most recently) scheduled gate for each level'
+        std::vector<unsigned int> levels;     //Holds the first (most recently) scheduled gate for each level
         std::vector<unsigned int> nextLevels; //Dffs schedule their fanouts here, then at the end of cycle copy  this to levels
+        std::vector<unsigned int> inputs;  //pointers to all the input gates
+        std::vector<unsigned int> outputs; //pointers to all the output gates for printing
+        std::vector<unsigned int> dffs;    //pointers to all the dff gates for printing
         const unsigned int dummyGate = UINT_MAX;//If the sched points here, this gate isn't scheduled.
         const unsigned int lastGate = UINT_MAX -1;//If the sched point here, This gate will terminate evalution of a level
 
@@ -62,12 +67,17 @@ class Simulator{
         bool initializeGates();//loads gates from file to Gates array, returns true if successful
         bool initializeStimulus();//Loads stimulus from file into stimulus array
         GateType stringToGateType(const std::string& typeStr);//turns a string into a gatetype
+        char logicToChar(const logic& val); //Turns a logic into a character for printing.
+        void reportStates(const std::vector<unsigned int>& array); //Takes an inputs/outputs/dffs array and prints the states of those gates
 
         //functions for simulation:
         void scheduleFannout(const unsigned int& gate);//schedules the fanout of gate
-        void simLevel(const unsigned int& level, const SimType& simtype);//Simluate a given level
-        logic evaluteTable(const unsigned int& gate);
-        logic evaluteScan(const unsigned int& gate);
+        //Table lookup Simulations
+        void simCycleTable(const unsigned int& simpos); //simulates a full cycle (all of the levels)
+        void simLevelTable(const unsigned int& level);//Simluate a given level
+        void evaluteTable(const unsigned int& gate); //Evaluates a gate with a table lookup
+        logic evaluteScan(const unsigned int& gate);  //Evaluetes a gate with an input scan
+        
 };  
 
 #endif
