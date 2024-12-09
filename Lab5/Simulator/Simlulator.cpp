@@ -394,7 +394,32 @@ void Simulator::simLevel(const unsigned int& level, const SimType& simtype){
 }
 
 logic Simulator::evaluteTable(const unsigned int& gate){
-    if (Gates->at(gate).getType() == GateType::BUFFER || Gates->at(gate).getType() == GateType::OUTPUT) Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
+    if (Gates->at(gate).getType() == GateType::BUFFER || Gates->at(gate).getType() == GateType::OUTPUT || Gates->at(gate).getType() == GateType::DFF) Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
     else if (Gates->at(gate).getType() == GateType::NOT) Gates->at(gate).setState(notTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState())]);
-    for 
+    else if (Gates->at(gate).getType() == GateType::AND){
+        Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
+        for (int i = 1; i < Gates->at(gate).getFaninGates().size(); i++){
+            Gates->at(gate).setState(andTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(i)).getState())][static_cast<int>(Gates->at(gate).getState())]);
+        }
+    }
+    else if (Gates->at(gate).getType() == GateType::OR){
+        Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
+        for (int i = 1; i < Gates->at(gate).getFaninGates().size(); i++){
+            Gates->at(gate).setState(orTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(i)).getState())][static_cast<int>(Gates->at(gate).getState())]);
+        }
+    }
+    else if (Gates->at(gate).getType() == GateType::NOR){
+        Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
+        for (int i = 1; i < Gates->at(gate).getFaninGates().size(); i++){
+            Gates->at(gate).setState(orTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(i)).getState())][static_cast<int>(Gates->at(gate).getState())]);
+        }
+        Gates->at(gate).setState(notTable[static_cast<int>(Gates->at(gate).getState())]);
+    }
+    else if (Gates->at(gate).getType() == GateType::NAND){
+        Gates->at(gate).setState(Gates->at(Gates->at(gate).getFaninGates().at(0)).getState());
+        for (int i = 1; i < Gates->at(gate).getFaninGates().size(); i++){
+            Gates->at(gate).setState(andTable[static_cast<int>(Gates->at(Gates->at(gate).getFaninGates().at(i)).getState())][static_cast<int>(Gates->at(gate).getState())]);
+        }
+        Gates->at(gate).setState(notTable[static_cast<int>(Gates->at(gate).getState())]);
+    }
 }

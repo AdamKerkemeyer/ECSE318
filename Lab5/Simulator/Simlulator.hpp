@@ -51,7 +51,8 @@ class Simulator{
         std::unique_ptr<std::vector<Gate>> Gates; //Each top level is a list of the gates of a given level
         std::unique_ptr<std::vector<std::vector<char>>> stimulus; //Each entry in the top vector is a line. Then each line is just an array of chars
         std::unordered_map<std::string, GateType> gateTypeMap;//reference type for switching between gatetype and string
-        std::vector<unsigned int> levels;     //Holds the first (most recently) scheduled gate for each level
+        std::vector<unsigned int> levels;     //Holds the first (most recently) scheduled gate for each level'
+        std::vector<unsigned int> nextLevels; //Dffs schedule their fanouts here, then at the end of cycle copy  this to levels
         const unsigned int dummyGate = UINT_MAX;//If the sched points here, this gate isn't scheduled.
         const unsigned int lastGate = UINT_MAX -1;//If the sched point here, This gate will terminate evalution of a level
 
