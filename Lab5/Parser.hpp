@@ -11,8 +11,9 @@ public:
     Parser(const std::string& filename);
     void parse();
     const std::vector<std::shared_ptr<Gate>>& getGates() const;
-    std::string gateTypeToString(GateType type);
+    std::string gateTypeToString(GateType type) const;
     GateType stringToGateType(const std::string& typeStr);
+    void makeTXT(const std::string& filename, const std::vector<std::shared_ptr<Gate>>& gates) const;
 
 
 private:

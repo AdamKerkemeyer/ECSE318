@@ -20,7 +20,7 @@ void Parser::initializeGateTypeMap() {
     gateTypeMap["buffer"] = GateType::BUFFER;
 }
 
-std::string gateTypeToString(GateType type) {
+std::string Parser::gateTypeToString(GateType type) const{
     switch (type) {
         case GateType::AND:     return "and";
         case GateType::OR:      return "or";
@@ -161,4 +161,49 @@ void Parser::connectGates(const std::string& output, const std::vector<std::stri
 
 const std::vector<std::shared_ptr<Gate>>& Parser::getGates() const {
     return gates;
+}
+
+void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_ptr<Gate>>& gates) const{
+    // Replace the ".v" extension from the filename to ".txt"
+    std::string txtFilename = filename.substr(0, filename.find_last_of('.')) + ".txt";
+    
+    std::ofstream outFile(txtFilename);
+    if (!outFile) {
+        std::cerr << "Error creating file: " << txtFilename << std::endl;
+        return;
+    }
+    //First Write A File Header:
+
+
+    // Write gate details to the file
+    for (const auto& gate : gates) {
+        outFile << "GATETYPE{" << gateTypeToString(gate->getType()) << "} ";
+        outFile << "OUTPUT{" << (gate->getType() == GateType::OUTPUT ? "TRUE" : "FALSE") << "} ";        
+        outFile << "GATELEVEL{" << gate->getLevel() << "} ";
+        outFile << "FANIN{";
+        if (gate->getType() != GateType::BUFFER && gate->getType() != GateType::INPUT && gate->getType() != GateType::OUTPUT) {
+            for (size_t i = 0; i < gate->getFaninGates().size(); ++i) {
+                outFile << gate->getFaninGates()[i]->getName();
+                if (i < gate->getFaninGates().size() - 1) {
+                    outFile << ",";         //Make sure we don't add a last unecessary comma
+                }
+            }
+        }
+        outFile << "} ";
+        
+        outFile << "FANOUT{";
+        if (gate->getType() != GateType::BUFFER && gate->getType() != GateType::INPUT && gate->getType() != GateType::OUTPUT) {
+            for (size_t i = 0; i < gate->getFanoutGates().size(); ++i) {
+                outFile << gate->getFanoutGates()[i]->getName();
+                if (i < gate->getFanoutGates().size() - 1) {
+                    outFile << ",";         //Make sure we don't add a last unecessary comma
+                }
+            }
+        }
+        outFile << "} ";
+        outFile << "GATENAME{" << gate->getName() << "}\n";
+    }
+
+    outFile.close();
+    std::cout << "File " << txtFilename << " created successfully." << std::endl;
 }
