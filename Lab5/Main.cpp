@@ -53,12 +53,5 @@ g++ -o main main.cpp Parser.cpp Gate.cpp
 ./main
 
 TODO:
-printout should also write to a .txt file the simulator can read. 
-
-Potentially rework parser to not use a vector of gates when instantiating.
-Rework parser input/output to parse by semicolon instead of line.
-Split wires that go to multiple gates into multiple buffers
-
-Write a prospectus to submit with it
     Explain that buffers are used to "split" gate outputs
 */
