@@ -22,9 +22,9 @@ Simulator::Simulator(){
 
 bool Simulator::initializeGates(){
     
-    std::string gatefile = "../Tests/S27.txt";
-    //std::cout << "Enter the name of the gatefile to parse: ";
-    //std::cin >> gatefile;
+    std::string gatefile;
+    std::cout << "Enter the name of the gatefile to parse: ";
+    std::cin >> gatefile;
 
     std::ifstream file(gatefile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
@@ -63,6 +63,37 @@ bool Simulator::initializeGates(){
     dffs = std::vector<unsigned int>();
     dffs.reserve(DffsSize);
 
+    //Setting up the inputs, outputs, and dffs arrays
+    std::getline(file, line);
+    std::vector<std::string> InputsStrings = gateData("INPUTS", line);
+    for (int i = 0; i < InputsSize; i++){
+        try{
+            inputs.push_back(std::stoi(InputsStrings.at(i)));
+        }catch(const std::invalid_argument e){
+            std::cout << "Invalid argument in inputs order array (line 2)\n";
+        }
+    }
+
+    std::getline(file, line);
+    std::vector<std::string> outputsStrings = gateData("OUTPUTS", line);
+    for (int i = 0; i < OutputsSize; i++){
+        try{
+            outputs.push_back(std::stoi(outputsStrings.at(i)));
+        }catch(const std::invalid_argument e){
+            std::cout << "Invalid argument in outptus order array (line 3)\n";
+        }
+    }
+
+    std::getline(file, line);
+    std::vector<std::string> dffsStrings = gateData("DFFS", line);
+    for (int i = 0; i < DffsSize; i++){
+        try{
+            dffs.push_back(std::stoi(dffsStrings.at(i)));
+        }catch(const std::invalid_argument e){
+            std::cout << "Invalid argument in Dffs order array (line 4)\n";
+        }
+    }
+
     std::string typeString = "";
     std::string outputString = "";
     std::string nameString = "";
@@ -85,6 +116,7 @@ bool Simulator::initializeGates(){
         //new gate to start building out
         Gates->push_back(Gate(nameString, newGateType, faninStrings.size(), fanoutStrings.size()));
 
+        /*
         //Record position if a special gate with a pointer to it
         if (newGateType == GateType::DFF){
             dffs.push_back(indexNum);
@@ -93,6 +125,7 @@ bool Simulator::initializeGates(){
         }else if (newGateType == GateType::INPUT){
             inputs.push_back(indexNum);
         }
+        */
 
         //get the level
         try{
@@ -152,9 +185,9 @@ bool Simulator::initializeGates(){
 }
 
 bool Simulator::initializeStimulus(){
-    std::string testfile = "../Tests/S27.vec";
-    //std::cout << "Enter the name of the testfile file to parse: ";
-    //std::cin >> testfile;
+    std::string testfile;
+    std::cout << "Enter the name of the testfile file to parse: ";
+    std::cin >> testfile;
     
     std::ifstream file(testfile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
@@ -280,6 +313,7 @@ char Simulator::logicToChar(const logic& val){
 void Simulator::reportStates(const std::vector<unsigned int>& array){
     for (unsigned int gate : array){
         std::cout << logicToChar(Gates->at(gate).getState()) << ": " << Gates->at(gate).getName() << ", ";
+        //std::cout << logicToChar(Gates->at(gate).getState());
     }
 }
 
@@ -340,7 +374,7 @@ void Simulator::simCycleTable(const unsigned int& simpos){
     }
 
     //print inputs, outputs, and Dffs
-    std::cout << "INPUTS   :";
+    std::cout << "INPUTS  :";
     reportStates(inputs);
     std::cout << "\nSTATE   :";
     reportStates(dffs);
@@ -362,9 +396,9 @@ void Simulator::simLevelTable(const unsigned int& level){
            // printLevels();
             if (Gates->at(currentGate).getState() != oldState){
                 scheduleFannout(currentGate);
-                std::cout <<"!!!!!! " << Gates->at(currentGate).getName() << ": " << logicToChar(Gates->at(currentGate).getState()) << "\n";
+                //std::cout <<"!!!!!! " << Gates->at(currentGate).getName() << ": " << logicToChar(Gates->at(currentGate).getState()) << "\n";
             }else{
-                std::cout << Gates->at(currentGate).getName() << ": " << logicToChar(Gates->at(currentGate).getState()) << "\n";
+                //std::cout << Gates->at(currentGate).getName() << ": " << logicToChar(Gates->at(currentGate).getState()) << "\n";
             }
             //printLevels();
 
@@ -441,7 +475,7 @@ void Simulator::simCycleScan(const unsigned int& simpos){
     }
 
     //print inputs, outputs, and Dffs
-    std::cout << "INPUTS   :";
+    std::cout << "INPUTS  :";
     reportStates(inputs);
     std::cout << "\nSTATE   :";
     reportStates(dffs);
