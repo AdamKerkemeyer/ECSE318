@@ -19,12 +19,15 @@ int main(){
 
     std::string SimType = "";
     std::cout << "Run an Input Scan simulation or a Table lookup Simulation? (I/T): ";
-    while (SimType != "I" || SimType != "T"){
+    bool SimDone = false;
+    while ((SimType != "I" || SimType != "T") && !SimDone){
         std::cin >> SimType;
         if (SimType == "I"){
             mySim->SimulateScan();
+            SimDone = true;
         }else if (SimType == "T"){
             mySim->SimulateTable();
+            SimDone = true;
         }else{
             std::cout << "Enter 'I' for Input Scan, or 'T' for Table Lookup: ";
         }

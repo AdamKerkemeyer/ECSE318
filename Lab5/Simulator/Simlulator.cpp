@@ -22,9 +22,9 @@ Simulator::Simulator(){
 
 bool Simulator::initializeGates(){
     
-    std::string gatefile;
-    std::cout << "Enter the name of the gatefile to parse: ";
-    std::cin >> gatefile;
+    std::string gatefile = "../Tests/S27.txt";
+    //std::cout << "Enter the name of the gatefile to parse: ";
+    //std::cin >> gatefile;
 
     std::ifstream file(gatefile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
@@ -152,9 +152,9 @@ bool Simulator::initializeGates(){
 }
 
 bool Simulator::initializeStimulus(){
-    std::string testfile;
-    std::cout << "Enter the name of the testfile file to parse: ";
-    std::cin >> testfile;
+    std::string testfile = "../Tests/S27.vec";
+    //std::cout << "Enter the name of the testfile file to parse: ";
+    //std::cin >> testfile;
     
     std::ifstream file(testfile);       //Lets us read lines from a file into a string
     if (!file.is_open()) {
@@ -279,7 +279,7 @@ char Simulator::logicToChar(const logic& val){
 
 void Simulator::reportStates(const std::vector<unsigned int>& array){
     for (unsigned int gate : array){
-        std::cout << logicToChar(Gates->at(gate).getState());
+        std::cout << logicToChar(Gates->at(gate).getState()) << ": " << Gates->at(gate).getName() << ", ";
     }
 }
 
@@ -362,6 +362,9 @@ void Simulator::simLevelTable(const unsigned int& level){
            // printLevels();
             if (Gates->at(currentGate).getState() != oldState){
                 scheduleFannout(currentGate);
+                std::cout <<"!!!!!! " << Gates->at(currentGate).getName() << ": " << logicToChar(Gates->at(currentGate).getState()) << "\n";
+            }else{
+                std::cout << Gates->at(currentGate).getName() << ": " << logicToChar(Gates->at(currentGate).getState()) << "\n";
             }
             //printLevels();
 
@@ -420,7 +423,6 @@ void Simulator::SimulateScan(){
 }
 
 void Simulator::simCycleScan(const unsigned int& simpos){
-    //std::cout << "Cycle Wide\n";
     //Sched Dff fannouts
     levels = nextLevels;
     nextLevels.assign(nextLevels.size(), lastGate);
