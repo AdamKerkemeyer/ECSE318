@@ -312,8 +312,8 @@ char Simulator::logicToChar(const logic& val){
 
 void Simulator::reportStates(const std::vector<unsigned int>& array){
     for (unsigned int gate : array){
-        std::cout << logicToChar(Gates->at(gate).getState()) << ": " << Gates->at(gate).getName() << ", ";
-        //std::cout << logicToChar(Gates->at(gate).getState());
+        //std::cout << logicToChar(Gates->at(gate).getState()) << ": " << Gates->at(gate).getName() << ", ";
+        std::cout << logicToChar(Gates->at(gate).getState());
     }
 }
 
@@ -368,16 +368,18 @@ void Simulator::simCycleTable(const unsigned int& simpos){
         }
     }
 
+    //print inputs and dff states
+    std::cout << "INPUTS  :";
+    reportStates(inputs);
+    std::cout << "\nSTATE   :";
+    reportStates(dffs);
+
     //run all level sims
     for (unsigned int lvl = 1; lvl < levels.size(); lvl ++){
         simLevelTable(lvl);
     }
 
-    //print inputs, outputs, and Dffs
-    std::cout << "INPUTS  :";
-    reportStates(inputs);
-    std::cout << "\nSTATE   :";
-    reportStates(dffs);
+    //print outputs
     std::cout << "\nOUTPUT  :";
     reportStates(outputs);
     std::cout << "\n\n";
