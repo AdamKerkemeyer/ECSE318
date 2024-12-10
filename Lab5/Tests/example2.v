@@ -4,7 +4,7 @@ input a;
 input b;
 output o;
 
-wire n5, d12;
+wire  n5, d12;
 
 not not5 (n5, a);
 and and7 (o, n5, b, d12);
