@@ -179,8 +179,6 @@ bool Simulator::initializeStimulus(){
     }
     file.close();
 
-    std::cout << "(" << outer_vec_size << " ," << inner_vec_size <<")\n";
-
     //initailize stimulus
     stimulus = std::make_unique<std::vector<std::vector<logic>>>(outer_vec_size, std::vector<logic>(inner_vec_size));
 
