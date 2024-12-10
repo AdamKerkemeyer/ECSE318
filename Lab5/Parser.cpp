@@ -3,6 +3,9 @@
 #include <sstream>
 #include <iostream>
 #include <regex>
+#include <queue>
+#include <algorithm>
+
 //Test
 Parser::Parser(const std::string& filename) : filename(filename) {
     initializeGateTypeMap();
@@ -22,15 +25,15 @@ void Parser::initializeGateTypeMap() {
 
 std::string Parser::gateTypeToString(GateType type) const{
     switch (type) {
-        case GateType::AND:     return "and";
-        case GateType::OR:      return "or";
-        case GateType::NOT:     return "not";
-        case GateType::NOR:     return "nor";
-        case GateType::NAND:    return "nand";
-        case GateType::DFF:     return "dff";
-        case GateType::INPUT:   return "input";
-        case GateType::OUTPUT:  return "output";
-        case GateType::BUFFER:  return "buffer";
+        case GateType::AND:     return "AND";
+        case GateType::OR:      return "OR";
+        case GateType::NOT:     return "NOT";
+        case GateType::NOR:     return "NOR";
+        case GateType::NAND:    return "NAND";
+        case GateType::DFF:     return "DFF";
+        case GateType::INPUT:   return "INPUT";
+        case GateType::OUTPUT:  return "OUTPUT";
+        case GateType::BUFFER:  return "BUFFER";
         default: return "ERROR: GATE TYPE UNKNOWN";
     }
 }
@@ -42,13 +45,16 @@ GateType Parser::stringToGateType(const std::string& typeStr) {
 
 void Parser::parse() {
     std::ifstream file(filename);       //Lets us read lines from a file into a string
+    dffCount = 0;                       //Reset private counters
+    inputCount = 0;
+    outputCount = 0;
     if (!file.is_open()) {
         std::cerr << "Error opening file: " << filename << std::endl;
         return;                         //Use cerr to output an error message if something goes wrong (not buffered like cout is)
     }
 
     std::string line;
-    bool parsingWires = false;            //Due to only 1 wire declaration, parser must remember it is reading wires until ";"
+    bool parsingWires = false;          //Due to only 1 wire declaration, parser must remember it is reading wires until ";"
     while (std::getline(file, line)) {
         if(line.find("wire") == 0){
             line = std::regex_replace(line, std::regex("^\\s+|\\s+$"), "");
@@ -77,6 +83,8 @@ void Parser::parse() {
     }
 
     file.close();
+
+    addBuffersToInputs();
 }
 
 void Parser::parseLine(const std::string& line) {
@@ -86,8 +94,11 @@ void Parser::parseLine(const std::string& line) {
         name = std::regex_replace(name, std::regex(";"), "");        
         name = std::regex_replace(name, std::regex("^\\s+|\\s+$"), "");
         auto inputGate = std::make_shared<Gate>(name, GateType::INPUT);
+        inputGate->setLevel(0);                              //All inputs always level 0
+        //To make simulator work all initial gates must be on level 2 so add a buffer (because dff outputs are on level 1)
         gates.push_back(inputGate);
         gateMap[name] = inputGate;
+        inputCount++;
         return;
     }
 
@@ -98,6 +109,7 @@ void Parser::parseLine(const std::string& line) {
         auto outputGate = std::make_shared<Gate>(name, GateType::OUTPUT);
         gates.push_back(outputGate);
         gateMap[name] = outputGate;
+        outputCount++;
         return;
     }
 
@@ -114,11 +126,13 @@ void Parser::parseLine(const std::string& line) {
             auto gate = std::make_shared<Gate>(name, type);
             gates.push_back(gate);
             gateMap[name] = gate;
-
+            if(gate->getType() == GateType::DFF) {
+                dffCount++;
+            }
             if (previousGate) {
                 previousGate->setNextGate(gate);
             }
-            previousGate = gate;
+            previousGate = gate;                        //Can traverse via pointers if you want
 
             std::istringstream connStream(connections);
             std::string output;
@@ -159,8 +173,78 @@ void Parser::connectGates(const std::string& output, const std::vector<std::stri
     }
 }
 
+void Parser::addBuffersToInputs() {
+    size_t initialSize = gates.size(); 
+    std::vector<std::shared_ptr<Gate>> newBufferGates;
+    //Need to add new buffers independently first because otherwise the program will loop forever
+    for (size_t i = 0; i < initialSize; ++i) {
+        const auto& gate = gates[i];
+        if (gate->getType() == GateType::INPUT) {
+            std::vector<std::shared_ptr<Gate>> originalFanouts = gate->getFanoutGates();
+            for (const auto& fanoutGate : originalFanouts) {
+                // Create a buffer gate
+                std::string bufferName = gate->getName() + "_buffer";
+                auto bufferGate = std::make_shared<Gate>(bufferName, GateType::BUFFER);
+                newBufferGates.push_back(bufferGate);
+                gateMap[bufferName] = bufferGate;
+
+                gate->addFanoutGate(bufferGate);
+                bufferGate->addFaninGate(gate);
+
+                bufferGate->addFanoutGate(fanoutGate);
+                fanoutGate->addFaninGate(bufferGate);
+
+                gate->removeFanoutGate(fanoutGate);
+                fanoutGate->removeFaninGate(gate);
+            }
+        }
+    }
+    gates.insert(gates.end(), newBufferGates.begin(), newBufferGates.end());
+}
+
 const std::vector<std::shared_ptr<Gate>>& Parser::getGates() const {
     return gates;
+}
+std::vector<std::shared_ptr<Gate>>& Parser::getGates() {
+    return gates;
+}
+
+void Parser::assignGateLevels(std::vector<std::shared_ptr<Gate>>& gates) const {
+    std::queue<std::shared_ptr<Gate>> q;
+    //Input gates already set to 0, all else are -1, add all inputs to queue
+    for (const auto& gate : gates) {
+        if (gate->getType() == GateType::INPUT) {
+            q.push(gate);
+        } 
+    }
+    //We are doing knockoff BFS because we will revisit nodes we already visited if the gate level is lower than the current gate
+    while (!q.empty()) {
+        int currentLevel = q.front()->getLevel();
+        std::vector<std::shared_ptr<Gate>> nextLevelGates;
+        //One entire level at a time, repeat as many times as necessary
+        while (!q.empty() && q.front()->getLevel() == currentLevel) {
+            auto currentGate = q.front();
+            q.pop();
+            for (const auto& fanoutGate : currentGate->getFanoutGates()) {
+                //if (fanoutGate->getLevel() == -1) { // We want to revisit gates if we already saw them to give them a higher (correct) level
+                    if (currentGate->getType() == GateType::DFF) {
+                        fanoutGate->setLevel(1);
+                    } else {
+                        fanoutGate->setLevel(currentLevel + 1);
+                        nextLevelGates.push_back(fanoutGate);
+                    }
+                //}
+            }
+        }
+
+        for (const auto& gate : nextLevelGates) {
+            q.push(gate);
+        }
+    }
+}
+
+bool Parser::compareGateLevels(const std::shared_ptr<Gate>& a, const std::shared_ptr<Gate>& b) {
+    return a->getLevel() < b->getLevel();
 }
 
 void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_ptr<Gate>>& gates) const{
@@ -172,8 +256,11 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
         std::cerr << "Error creating file: " << txtFilename << std::endl;
         return;
     }
-    //First Write A File Header:
-
+    // Write a header
+    outFile << "GATES{" << gates.size() << "} ";
+    outFile << "INPUTS{" << inputCount <<  "} ";
+    outFile << "OUTPUTS{" << outputCount <<  "} ";
+    outFile << "DFFS{" << dffCount <<  "}\n";
 
     // Write gate details to the file
     for (const auto& gate : gates) {
@@ -181,9 +268,9 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
         outFile << "OUTPUT{" << (gate->getType() == GateType::OUTPUT ? "TRUE" : "FALSE") << "} ";        
         outFile << "GATELEVEL{" << gate->getLevel() << "} ";
         outFile << "FANIN{";
-        if (gate->getType() != GateType::BUFFER && gate->getType() != GateType::INPUT && gate->getType() != GateType::OUTPUT) {
+        if (gate->getType() != GateType::INPUT) {
             for (size_t i = 0; i < gate->getFaninGates().size(); ++i) {
-                outFile << gate->getFaninGates()[i]->getName();
+                outFile << gate->getFaninGates()[i]->getArrayLocation();
                 if (i < gate->getFaninGates().size() - 1) {
                     outFile << ",";         //Make sure we don't add a last unecessary comma
                 }
@@ -192,9 +279,9 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
         outFile << "} ";
         
         outFile << "FANOUT{";
-        if (gate->getType() != GateType::BUFFER && gate->getType() != GateType::INPUT && gate->getType() != GateType::OUTPUT) {
+        if (gate->getType() != GateType::OUTPUT) {
             for (size_t i = 0; i < gate->getFanoutGates().size(); ++i) {
-                outFile << gate->getFanoutGates()[i]->getName();
+                outFile << gate->getFanoutGates()[i]->getArrayLocation();
                 if (i < gate->getFanoutGates().size() - 1) {
                     outFile << ",";         //Make sure we don't add a last unecessary comma
                 }
@@ -206,4 +293,13 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
 
     outFile.close();
     std::cout << "File " << txtFilename << " created successfully." << std::endl;
+}
+
+void Parser::sortGates(std::vector<std::shared_ptr<Gate>>& gates) const {
+    std::sort(gates.begin(), gates.end(), compareGateLevels);
+    int i = 0;
+    for(const auto& gate : gates){
+        gate->setArrayLocation(i);
+        i++;
+    }
 }

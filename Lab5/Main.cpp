@@ -16,9 +16,11 @@ int main() {
     Parser parser(filename);
     parser.parse();
 
-    const std::vector<std::shared_ptr<Gate>>& gates = parser.getGates();
+    std::vector<std::shared_ptr<Gate>>& gates = parser.getGates();              //By not putting const in front we are calling the non constant getGates();
     std::cout << "Parsed " << gates.size() << " gates from the file." << std::endl;
-
+    
+    parser.assignGateLevels(gates);
+    parser.sortGates(gates);
     parser.makeTXT(filename, gates);
 
     /* Original Printout:
@@ -58,4 +60,5 @@ Rework parser input/output to parse by semicolon instead of line.
 Split wires that go to multiple gates into multiple buffers
 
 Write a prospectus to submit with it
+    Explain that buffers are used to "split" gate outputs
 */

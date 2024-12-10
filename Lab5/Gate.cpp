@@ -28,8 +28,8 @@ const int Gate::getLevel() const {
     return level;
 }
 
-const logic Gate::getState() const{
-    return state;
+const int Gate::getArrayLocation() const {
+    return arrayLocation;
 }
 
 void Gate::setName(const std::string& name) {
@@ -56,8 +56,8 @@ void Gate::setLevel(int level){
     this->level = level;
 }
 
-void Gate::setState(logic state){
-    this->state = state;
+void Gate::setArrayLocation(int arrayLocation){
+    this->arrayLocation = arrayLocation;
 }
 
 void Gate::addFaninGate(std::shared_ptr<Gate> faninGate) {
@@ -66,4 +66,25 @@ void Gate::addFaninGate(std::shared_ptr<Gate> faninGate) {
 
 void Gate::addFanoutGate(std::shared_ptr<Gate> fanoutGate) {
     fanoutGates.push_back(fanoutGate);
+}
+
+//void Gate::removeFaninGate(std::shared_ptr<Gate> faninGate) {
+//    faninGates.erase(std::remove(faninGates.begin(), faninGates.end(), faninGate), faninGates.end());
+//}
+void Gate::removeFaninGate(std::shared_ptr<Gate> faninGate) {
+    for (auto it = faninGates.begin(); it != faninGates.end(); ++it) {
+        if (*it == faninGate) {
+            faninGates.erase(it);
+            break;
+        }
+    }
+}
+
+void Gate::removeFanoutGate(std::shared_ptr<Gate> fanoutGate) {
+    for (auto it = fanoutGates.begin(); it != fanoutGates.end(); ++it) {
+        if (*it == fanoutGate) {
+            fanoutGates.erase(it);
+            break;
+        }
+    }
 }
