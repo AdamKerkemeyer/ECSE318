@@ -45,7 +45,6 @@ GateType Parser::stringToGateType(const std::string& typeStr) {
 
 void Parser::parse() {
     std::ifstream file(filename);       //Lets us read lines from a file into a string
-    dffCount = 0;                       //Reset private counters
     inputCount = 0;
     outputCount = 0;
     if (!file.is_open()) {
@@ -54,7 +53,23 @@ void Parser::parse() {
     }
 
     std::string line;
-    bool parsingWires = false;          //Due to only 1 wire declaration, parser must remember it is reading wires until ";"
+    bool parsingWires = false;          //Due to only 1 wire declaration, parser must remember it is reading wires until ";" 
+
+    // Get the first line for order of inputs and outputs (all inputs should be declared before all outputs)
+    if (std::getline(file, line)) {
+        std::size_t start = line.find('(');
+        std::size_t end = line.find(')');
+        if (start != std::string::npos && end != std::string::npos) {   //If we found '(' and ')'
+            std::string gates = line.substr(start + 1, end - start - 1);//Grab entire string
+            std::istringstream gateStream(gates);
+            std::string IO;
+            while (std::getline(gateStream, IO, ',')) {
+                IO = std::regex_replace(IO, std::regex("^\\s+|\\s+$"), ""); //Remove first and last whitespace
+                IOnames.push_back(IO);
+            }
+        }
+    }
+
     while (std::getline(file, line)) {
         if(line.find("wire") == 0){
             line = std::regex_replace(line, std::regex("^\\s+|\\s+$"), "");
@@ -127,7 +142,7 @@ void Parser::parseLine(const std::string& line) {
             gates.push_back(gate);
             gateMap[name] = gate;
             if(gate->getType() == GateType::DFF) {
-                dffCount++;
+                dffArray.push_back(gate->getName());
             }
             if (previousGate) {
                 previousGate->setNextGate(gate);
@@ -246,6 +261,9 @@ void Parser::assignGateLevels(std::vector<std::shared_ptr<Gate>>& gates) const {
 bool Parser::compareGateLevels(const std::shared_ptr<Gate>& a, const std::shared_ptr<Gate>& b) {
     return a->getLevel() < b->getLevel();
 }
+bool Parser::compareGateName(const std::shared_ptr<Gate>& gate, const std::string& name) {
+    return gate->getName() == name;
+}
 
 void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_ptr<Gate>>& gates) const{
     // Replace the ".v" extension from the filename to ".txt"
@@ -256,11 +274,73 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
         std::cerr << "Error creating file: " << txtFilename << std::endl;
         return;
     }
+    if (IOnames.size() != (inputCount + outputCount)) {
+        std::cerr << "Number of input and output gates does not match module declaration" << std::endl;
+        return;                         //Use cerr to output an error message if something goes wrong (not buffered like cout is)
+    }
     // Write a header
     outFile << "GATES{" << gates.size() << "} ";
     outFile << "INPUTS{" << inputCount <<  "} ";
     outFile << "OUTPUTS{" << outputCount <<  "} ";
-    outFile << "DFFS{" << dffCount <<  "}\n";
+    outFile << "DFFS{" << dffArray.size() <<  "}\n";
+
+    // Write the array location of each input, output, and dff in the order they are presented in the header.
+    // To do this I am taking the string vector of inputs and outputs we made earlier and matching them to the array locations
+    // Of the corresponding input and output, we know outputs always come last so we can just put the first X number
+    // of inputs into the inputs brackets, and then put everything else in the output bracket. 
+    std::vector<int> arrayLocations;
+    for (const auto& name : IOnames) {
+        bool found = false;
+        for (size_t i = 0; i < gates.size(); ++i) {
+            if (gates[i]->getName() == name) {
+                arrayLocations.push_back(gates[i]->getArrayLocation());
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            arrayLocations.push_back(-1);   //If the gate is not found, store -1
+        }
+    }
+    outFile << "INPUTS{";
+    for (int i = 0; i < inputCount; ++i) {
+        outFile << arrayLocations[i];
+        if (i < inputCount - 1) {
+            outFile << ", "; 
+        }
+    }
+    outFile << "}\n";
+    outFile << "OUTPUTS{";
+    for (int i = inputCount; i < inputCount + outputCount; ++i) {
+        outFile << arrayLocations[i];
+        if (i < inputCount + outputCount - 1) {
+            outFile << ", ";
+        }
+    }
+    outFile << "}\n";
+    //We have to do the same thing with the DFFs but they are stored seperately because they are not declared in the module header
+    std::vector<int> dffLocations;
+    for (const auto& name : dffArray) {
+        bool found = false;
+        for (size_t i = 0; i < gates.size(); ++i) {
+            if (gates[i]->getName() == name) {
+                dffLocations.push_back(gates[i]->getArrayLocation());
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            dffLocations.push_back(-1);   //If the gate is not found, store -1
+        }
+    }
+    outFile << "DFFS{";
+    for (int i = 0; i < dffArray.size(); i++){
+        outFile << dffLocations[i];
+        if (i < dffArray.size() - 1) {
+            outFile << ", ";
+        }
+    }
+    outFile << "}\n";
 
     // Write gate details to the file
     for (const auto& gate : gates) {

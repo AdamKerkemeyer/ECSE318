@@ -48,10 +48,6 @@ int main() {
 /*
 # Compile the program
 g++ -o main main.cpp Parser.cpp Gate.cpp
-
 # Run the program
 ./main
-
-TODO:
-    Explain that buffers are used to "split" gate outputs
 */

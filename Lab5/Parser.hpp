@@ -27,12 +27,14 @@ private:
     std::vector<std::string> gateLines;             //Store gate lines (GX, GX, GX) to process in a second wave
     int inputCount;
     int outputCount;
-    int dffCount;
+    std::vector<std::string> dffArray;              //Used to store the names of every DFF we parse for lookup later
+    std::vector<std::string> IOnames;               //Store the order in which the inputs and outputs are declared in the file.
 
     void initializeGateTypeMap();
     void parseLine(const std::string& line);
     void connectGates(const std::string& output, const std::vector<std::string>& inputs, std::shared_ptr<Gate> gate);
     static bool compareGateLevels(const std::shared_ptr<Gate>& a, const std::shared_ptr<Gate>& b);
+    static bool compareGateName(const std::shared_ptr<Gate>& gate, const std::string& name);
     void addBuffersToInputs();
 };
 
