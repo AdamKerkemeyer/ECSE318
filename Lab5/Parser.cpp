@@ -235,21 +235,28 @@ void Parser::assignGateLevels() {
             q.push(gate);
         } 
     }
-    //We are doing knockoff BFS because we will revisit nodes we already visited if the gate level is lower than the current gate
+
     while (!q.empty()) {
         int currentLevel = q.front()->getLevel();
         std::vector<std::shared_ptr<Gate>> nextLevelGates;
         //One entire level at a time, repeat as many times as necessary
-        while (!q.empty() && q.front()->getLevel() == currentLevel) {
+        while (!q.empty()) {
             auto currentGate = q.front();
             q.pop();
             for (const auto& fanoutGate : currentGate->getFanoutGates()) {
                 //if (fanoutGate->getLevel() == -1) { // We want to revisit gates if we already saw them to give them a higher (correct) level
                     if (currentGate->getType() == GateType::DFF) {
                         fanoutGate->setLevel(1);
+                        //The larger .v files have dff files that just connect to other gates without inputs, so we need to check these as well.
+                        for (const auto& nextFanoutGate : fanoutGate->getFanoutGates()) {
+                            if (nextFanoutGate->getLevel() == -1) {
+                                nextFanoutGate->setLevel(2);        //This gate starts at level 2 now (one above the DFF output level of its fanin)
+                                q.push(nextFanoutGate);
+                            }
+                    }
                     } else {
-                        fanoutGate->setLevel(currentLevel + 1);
-                        nextLevelGates.push_back(fanoutGate);
+                        fanoutGate->setLevel(currentGate->getLevel() + 1);
+                        q.push(fanoutGate);
                     }
                 //}
             }
