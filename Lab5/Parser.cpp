@@ -290,16 +290,13 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
     // of inputs into the inputs brackets, and then put everything else in the output bracket. 
     std::vector<int> arrayLocations;
     for (const auto& name : IOnames) {
-        bool found = false;
-        for (size_t i = 0; i < gates.size(); ++i) {
-            if (gates[i]->getName() == name) {
-                arrayLocations.push_back(gates[i]->getArrayLocation());
-                found = true;
-                break;
-            }
+        auto it = gateMap.find(name);       //Use gate map to find each gate's array location in time O(1)
+        if (it != gateMap.end()){
+            arrayLocations.push_back(it->second->getArrayLocation());
         }
-        if (!found) {
-            arrayLocations.push_back(-1);   //If the gate is not found, store -1
+        else {
+            arrayLocations.push_back(-1);   //The gate name was not found, throw an error
+            std::cerr << "IO declaration is missing: " << name << std::endl;
         }
     }
     outFile << "INPUTS{";
@@ -321,16 +318,13 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
     //We have to do the same thing with the DFFs but they are stored seperately because they are not declared in the module header
     std::vector<int> dffLocations;
     for (const auto& name : dffArray) {
-        bool found = false;
-        for (size_t i = 0; i < gates.size(); ++i) {
-            if (gates[i]->getName() == name) {
-                dffLocations.push_back(gates[i]->getArrayLocation());
-                found = true;
-                break;
-            }
+        auto it = gateMap.find(name);       //Use gate map to find each gate's array location in time O(1)
+        if (it != gateMap.end()){
+            dffLocations.push_back(it->second->getArrayLocation());
         }
-        if (!found) {
-            dffLocations.push_back(-1);   //If the gate is not found, store -1
+        else {
+            dffLocations.push_back(-1);   //The gate name was not found, throw an error
+            std::cerr << "IO declaration is missing: " << name << std::endl;
         }
     }
     outFile << "DFFS{";
