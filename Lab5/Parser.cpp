@@ -224,7 +224,7 @@ std::vector<std::shared_ptr<Gate>>& Parser::getGates() {
     return gates;
 }
 
-void Parser::assignGateLevels(std::vector<std::shared_ptr<Gate>>& gates) const {
+void Parser::assignGateLevels() {
     std::queue<std::shared_ptr<Gate>> q;
     //Input gates already set to 0, all else are -1, add all inputs to queue
     for (const auto& gate : gates) {
@@ -265,7 +265,7 @@ bool Parser::compareGateName(const std::shared_ptr<Gate>& gate, const std::strin
     return gate->getName() == name;
 }
 
-void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_ptr<Gate>>& gates) const{
+void Parser::makeTXT(const std::string& filename) {
     // Replace the ".v" extension from the filename to ".txt"
     std::string txtFilename = filename.substr(0, filename.find_last_of('.')) + ".txt";
     
@@ -369,7 +369,7 @@ void Parser::makeTXT(const std::string& filename, const std::vector<std::shared_
     std::cout << "File " << txtFilename << " created successfully." << std::endl;
 }
 
-void Parser::sortGates(std::vector<std::shared_ptr<Gate>>& gates) const {
+void Parser::sortGates() {
     std::sort(gates.begin(), gates.end(), compareGateLevels);
     int i = 0;
     for(const auto& gate : gates){

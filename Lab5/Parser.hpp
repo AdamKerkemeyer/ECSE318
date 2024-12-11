@@ -14,9 +14,9 @@ public:
     std::vector<std::shared_ptr<Gate>>& getGates(); //non constant version for assignGateLevels
     std::string gateTypeToString(GateType type) const;
     GateType stringToGateType(const std::string& typeStr);
-    void makeTXT(const std::string& filename, const std::vector<std::shared_ptr<Gate>>& gates) const;
-    void assignGateLevels(std::vector<std::shared_ptr<Gate>>& gates) const;
-    void sortGates(std::vector<std::shared_ptr<Gate>>& gates) const;
+    void makeTXT(const std::string& filename);
+    void assignGateLevels();
+    void sortGates();
 
 private:
     std::string filename;

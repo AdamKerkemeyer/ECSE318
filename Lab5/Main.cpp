@@ -19,9 +19,9 @@ int main() {
     std::vector<std::shared_ptr<Gate>>& gates = parser.getGates();              //By not putting const in front we are calling the non constant getGates();
     std::cout << "Parsed " << gates.size() << " gates from the file." << std::endl;
     
-    parser.assignGateLevels(gates);
-    parser.sortGates(gates);
-    parser.makeTXT(filename, gates);
+    parser.assignGateLevels();
+    parser.sortGates();
+    parser.makeTXT(filename);
 
     /* Original Printout:
     Don't delete, I am going to put this in a function that will run on the terminal because it puts the information in the most readable format
