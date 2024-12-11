@@ -55,18 +55,21 @@ void Parser::parse() {
     std::string line;
     bool parsingWires = false;          //Due to only 1 wire declaration, parser must remember it is reading wires until ";" 
 
-    // Get the first line for order of inputs and outputs (all inputs should be declared before all outputs)
-    if (std::getline(file, line)) {
-        std::size_t start = line.find('(');
-        std::size_t end = line.find(')');
-        if (start != std::string::npos && end != std::string::npos) {   //If we found '(' and ')'
-            std::string gates = line.substr(start + 1, end - start - 1);//Grab entire string
-            std::istringstream gateStream(gates);
-            std::string IO;
-            while (std::getline(gateStream, IO, ',')) {
-                IO = std::regex_replace(IO, std::regex("^\\s+|\\s+$"), ""); //Remove first and last whitespace
-                IOnames.push_back(IO);
+    // Get the module line for order of inputs and outputs (all inputs should be declared before all outputs), ignore everything before that
+    while (std::getline(file, line)) {
+        if(line.find("module") != std::string::npos){
+            std::size_t start = line.find('(');
+            std::size_t end = line.find(')');
+            if (start != std::string::npos && end != std::string::npos) {   //If we found '(' and ')'
+                std::string gates = line.substr(start + 1, end - start - 1);//Grab entire string
+                std::istringstream gateStream(gates);
+                std::string IO;
+                while (std::getline(gateStream, IO, ',')) {
+                    IO = std::regex_replace(IO, std::regex("^\\s+|\\s+$"), ""); //Remove first and last whitespace
+                    IOnames.push_back(IO);
+                }
             }
+            break;
         }
     }
 
@@ -274,20 +277,23 @@ void Parser::makeTXT(const std::string& filename) {
         std::cerr << "Error creating file: " << txtFilename << std::endl;
         return;
     }
+    
     if (IOnames.size() != (inputCount + outputCount)) {
         std::cerr << "Number of input and output gates does not match module declaration" << std::endl;
         return;                         //Use cerr to output an error message if something goes wrong (not buffered like cout is)
     }
     // Write a header
+    //std::cout << "Counted this many IO: " << IOnames.size() << std::endl;
+
     outFile << "GATES{" << gates.size() << "} ";
     outFile << "INPUTS{" << inputCount <<  "} ";
     outFile << "OUTPUTS{" << outputCount <<  "} ";
     outFile << "DFFS{" << dffArray.size() <<  "}\n";
-
     // Write the array location of each input, output, and dff in the order they are presented in the header.
     // To do this I am taking the string vector of inputs and outputs we made earlier and matching them to the array locations
     // Of the corresponding input and output, we know outputs always come last so we can just put the first X number
     // of inputs into the inputs brackets, and then put everything else in the output bracket. 
+    
     std::vector<int> arrayLocations;
     for (const auto& name : IOnames) {
         auto it = gateMap.find(name);       //Use gate map to find each gate's array location in time O(1)
@@ -315,6 +321,7 @@ void Parser::makeTXT(const std::string& filename) {
         }
     }
     outFile << "}\n";
+    
     //We have to do the same thing with the DFFs but they are stored seperately because they are not declared in the module header
     std::vector<int> dffLocations;
     for (const auto& name : dffArray) {
