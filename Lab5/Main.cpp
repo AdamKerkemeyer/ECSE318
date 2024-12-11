@@ -27,26 +27,6 @@ int main() {
     if (userResponse == 'y' || userResponse == 'Y') {
         parser.makeReadableTXT(filename);
     }
-
-    /* Original Printout:
-    Don't delete, I am going to put this in a function that will run on the terminal because it puts the information in the most readable format
-    // Print details of each gate, including fanin and fanout gates
-    for (const Gate* gate : gates) {
-        std::cout << "Gate: " << gate->getName() << ", Type: " << gateTypeToString(gate->getType()) << std::endl;
-
-        std::cout << "  Fanin gates: ";
-        for (const Gate* faninGate : gate->getFaninGates()) {
-            std::cout << faninGate->getName() << " ";
-        }
-        std::cout << std::endl;
-
-        std::cout << "  Fanout gates: ";
-        for (const Gate* fanoutGate : gate->getFanoutGates()) {
-            std::cout << fanoutGate->getName() << " ";
-        }
-        std::cout << std::endl;
-    }
-    */
     return 0;
 }
 

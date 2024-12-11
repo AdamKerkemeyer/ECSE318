@@ -387,10 +387,7 @@ void Parser::makeReadableTXT(const std::string& filename) {
         std::cerr << "Error creating file: " << txtFilename << std::endl;
         return;
     }
-    if (IOnames.size() != (inputCount + outputCount)) {
-        std::cerr << "Number of input and output gates does not match module declaration" << std::endl;
-        return;                         //Use cerr to output an error message if something goes wrong (not buffered like cout is)
-    }
+
     // Write a header
     outFile << "GATES{" << gates.size() << "} ";
     outFile << "INPUTS{" << inputCount <<  "} ";
