@@ -268,12 +268,12 @@ std::vector<std::string> Simulator::gateData(const std::string& target, std::str
     size_t inputLength = target.length();
     if (startPos + inputLength + 1 == endPos){//zero length string
         line.erase(startPos, endPos + 1 - startPos);
-        return std::vector<std::string>(0);
+        return std::vector<std::string>(0); //Evan you should use std::vector<std::string>(); instead
     }
     std::string valString = line.substr(startPos + inputLength + 1, endPos - (startPos + inputLength + 1));
     line.erase(startPos, endPos + 1 - startPos);
     if (valString.find(",") == std::string::npos){
-        return std::vector(1, valString);
+        return std::vector<std::string>(1, valString);
     }
     else{
         std::vector<std::string> result;
