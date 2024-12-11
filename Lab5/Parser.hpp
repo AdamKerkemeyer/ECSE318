@@ -15,6 +15,7 @@ public:
     std::string gateTypeToString(GateType type) const;
     GateType stringToGateType(const std::string& typeStr);
     void makeTXT(const std::string& filename);
+    void makeReadableTXT(const std::string& filename);
     void assignGateLevels();
     void sortGates();
 

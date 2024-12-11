@@ -377,3 +377,106 @@ void Parser::sortGates() {
         i++;
     }
 }
+
+void Parser::makeReadableTXT(const std::string& filename) {
+    // Replace the ".v" extension from the filename to ".txt"
+    std::string txtFilename =filename.substr(0, filename.find_last_of('.')) + "READABLE.txt";
+    
+    std::ofstream outFile(txtFilename);
+    if (!outFile) {
+        std::cerr << "Error creating file: " << txtFilename << std::endl;
+        return;
+    }
+    if (IOnames.size() != (inputCount + outputCount)) {
+        std::cerr << "Number of input and output gates does not match module declaration" << std::endl;
+        return;                         //Use cerr to output an error message if something goes wrong (not buffered like cout is)
+    }
+    // Write a header
+    outFile << "GATES{" << gates.size() << "} ";
+    outFile << "INPUTS{" << inputCount <<  "} ";
+    outFile << "OUTPUTS{" << outputCount <<  "} ";
+    outFile << "DFFS{" << dffArray.size() <<  "}\n";
+
+    // Write the array location of each input, output, and dff in the order they are presented in the header.
+    // To do this I am taking the string vector of inputs and outputs we made earlier and matching them to the array locations
+    // Of the corresponding input and output, we know outputs always come last so we can just put the first X number
+    // of inputs into the inputs brackets, and then put everything else in the output bracket. 
+    std::vector<std::string> arrayLocations;
+    for (const auto& name : IOnames) {
+        auto it = gateMap.find(name);       //Use gate map to find each gate's array location in time O(1)
+        if (it != gateMap.end()){
+            arrayLocations.push_back(it->second->getName());
+        }
+        else {
+            arrayLocations.push_back("ERROR");   //The gate name was not found, throw an error
+            std::cerr << "IO declaration is missing: " << name << std::endl;
+        }
+    }
+    outFile << "INPUTS{";
+    for (int i = 0; i < inputCount; ++i) {
+        outFile << arrayLocations[i];
+        if (i < inputCount - 1) {
+            outFile << ", "; 
+        }
+    }
+    outFile << "}\n";
+    outFile << "OUTPUTS{";
+    for (int i = inputCount; i < inputCount + outputCount; ++i) {
+        outFile << arrayLocations[i];
+        if (i < inputCount + outputCount - 1) {
+            outFile << ", ";
+        }
+    }
+    outFile << "}\n";
+    //We have to do the same thing with the DFFs but they are stored seperately because they are not declared in the module header
+    std::vector<std::string> dffLocations;
+    for (const auto& name : dffArray) {
+        auto it = gateMap.find(name);       //Use gate map to find each gate's array location in time O(1)
+        if (it != gateMap.end()){
+            dffLocations.push_back(it->second->getName());
+        }
+        else {
+            dffLocations.push_back("ERROR");   //The gate name was not found, throw an error
+            std::cerr << "IO declaration is missing: " << name << std::endl;
+        }
+    }
+    outFile << "DFFS{";
+    for (int i = 0; i < dffArray.size(); i++){
+        outFile << dffLocations[i];
+        if (i < dffArray.size() - 1) {
+            outFile << ", ";
+        }
+    }
+    outFile << "}\n";
+
+    // Write gate details to the file
+    for (const auto& gate : gates) {
+        outFile << "GATETYPE{" << gateTypeToString(gate->getType()) << "} ";
+        outFile << "OUTPUT{" << (gate->getType() == GateType::OUTPUT ? "TRUE" : "FALSE") << "} ";        
+        outFile << "GATELEVEL{" << gate->getLevel() << "} ";
+        outFile << "FANIN{";
+        if (gate->getType() != GateType::INPUT) {
+            for (size_t i = 0; i < gate->getFaninGates().size(); ++i) {
+                outFile << gate->getFaninGates()[i]->getName();
+                if (i < gate->getFaninGates().size() - 1) {
+                    outFile << ",";         //Make sure we don't add a last unecessary comma
+                }
+            }
+        }
+        outFile << "} ";
+        
+        outFile << "FANOUT{";
+        if (gate->getType() != GateType::OUTPUT) {
+            for (size_t i = 0; i < gate->getFanoutGates().size(); ++i) {
+                outFile << gate->getFanoutGates()[i]->getName();
+                if (i < gate->getFanoutGates().size() - 1) {
+                    outFile << ",";         //Make sure we don't add a last unecessary comma
+                }
+            }
+        }
+        outFile << "} ";
+        outFile << "GATENAME{" << gate->getName() << "}\n";
+    }
+    outFile.close();
+    std::cout << "File " << txtFilename << " created successfully." << std::endl;
+}
